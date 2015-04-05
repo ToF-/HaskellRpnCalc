@@ -20,7 +20,8 @@ result (Right (n:_)) = Right n
 (-:) :: Calculator -> Operation -> Calculator
 (-:) (Left m) _ = Left m
 (-:) (Right ns) (Number n) = Right (n:ns) 
-(-:) (Right (n:[])) (Binary (+)) = Left "not enough parameters - no result" 
-(-:) (Right (n:ns)) (Unary (negate)) = Right (negate n:ns)
-(-:) (Right (n:m:ns)) (Binary (+)) = Right (n+m:ns)
+(-:) (Right ([])) (Unary _) = Left "not enough parameters - no result" 
+(-:) (Right (n:[])) (Binary _) = Left "not enough parameters - no result" 
+(-:) (Right (n:ns)) (Unary op) = Right (op n:ns)
+(-:) (Right (n:m:ns)) (Binary op) = Right (op n m:ns)
 
