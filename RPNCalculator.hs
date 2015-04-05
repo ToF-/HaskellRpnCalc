@@ -1,19 +1,24 @@
 module RPNCalculator (calculator, result, (-:), Operation (..))
 where
 
-type Calculator = [Double]
+type Stack = [Double]
 data Operation = Number Double
                | Binary (Double -> Double -> Double)
 
+type Calculator = Either String Stack
+
 infixl 5 -:
 
-calculator = []
+calculator = Right []
 
 result :: Calculator -> Either String Double 
-result [] = Left "stack is empty - no result"
-result (n:_) = Right n
+result (Left m) = Left m
+result (Right []) = Left "stack is empty - no result"
+result (Right (n:_)) = Right n
 
 (-:) :: Calculator -> Operation -> Calculator
-(-:) c (Number n) = n:c 
-(-:) (n:m:ns) (Binary (+)) = n+m:ns
+(-:) (Left m) _ = Left m
+(-:) (Right ns) (Number n) = Right (n:ns) 
+(-:) (Right (n:[])) (Binary (+)) = Left "not enough parameters - no result" 
+(-:) (Right (n:m:ns)) (Binary (+)) = Right (n+m:ns)
 

@@ -14,4 +14,12 @@ main = hspec $ do
         it "should support addition" $ do
             result (c -: Number 1 -: Number 2 -: Binary (+)) `shouldBe` (Right 3.0)
 
+        it "yields an error when not enough numbers on the stack for binary addition" $ do
+            result (c -: Number 1 -: Binary (+)) `shouldBe` (Left "not enough parameters - no result")
+
+        it "stops at the first error when given not enough numbers" $ do
+            result (c -: Number 1 -: Binary (+) -: Number 2 -: Binary (*)) `shouldBe`(Left "not enough parameters - no result")
+
+      
+
 
