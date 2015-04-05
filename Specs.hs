@@ -11,4 +11,7 @@ main = hspec $ do
             result (c -: Number 4807.00) `shouldBe` Right 4807.00
             result (c -: Number 1 -: Number 2) `shouldBe` (Right 2.0)
 
+        it "should support addition" $ do
+            result (c -: Number 1 -: Number 2 -: Binary (+)) `shouldBe` (Right 3.0)
+
 
