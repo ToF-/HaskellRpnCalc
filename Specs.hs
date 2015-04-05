@@ -1,8 +1,12 @@
 import Test.Hspec
+import RPNCalculator
 
+c = calculator
 main = hspec $ do
-    describe "RPN calcuator" $ do
-        it "should pass a dummy test" $ do
-            1+1 `shouldBe` 2
+    describe "RPN calculator" $ do
+        it "should not yield a result when not given numbers" $ do
+            result c `shouldBe` Left "stack is empty - no result"
 
+        it "should yield the last number stacked as a result" $ do
+            result (c -:  (Number 4807.00)) `shouldBe` Right 4807.00
 
