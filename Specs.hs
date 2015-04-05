@@ -20,6 +20,8 @@ main = hspec $ do
         it "stops at the first error when given not enough numbers" $ do
             result (c -: Number 1 -: Binary (+) -: Number 2 -: Binary (*)) `shouldBe`(Left "not enough parameters - no result")
 
-      
+        it "should support unary operation" $ do
+            result (c -: Number 48.05 -: Unary (negate)) `shouldBe` (Right (-48.05))
+ 
 
 

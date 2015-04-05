@@ -3,6 +3,7 @@ where
 
 type Stack = [Double]
 data Operation = Number Double
+               | Unary (Double -> Double)
                | Binary (Double -> Double -> Double)
 
 type Calculator = Either String Stack
@@ -20,5 +21,6 @@ result (Right (n:_)) = Right n
 (-:) (Left m) _ = Left m
 (-:) (Right ns) (Number n) = Right (n:ns) 
 (-:) (Right (n:[])) (Binary (+)) = Left "not enough parameters - no result" 
+(-:) (Right (n:ns)) (Unary (negate)) = Right (negate n:ns)
 (-:) (Right (n:m:ns)) (Binary (+)) = Right (n+m:ns)
 
