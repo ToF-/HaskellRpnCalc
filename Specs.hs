@@ -8,6 +8,7 @@ main = hspec $ do
             result c `shouldBe` Left "stack is empty - no result"
 
         it "should yield the last number stacked as a result" $ do
-            result (c -:  (Number 4807.00)) `shouldBe` Right 4807.00
-            result ((c -: (Number 1)) -: (Number 2)) `shouldBe` Right 2.0
+            result (c -: Number 4807.00) `shouldBe` Right 4807.00
+            result (c -: Number 1 -: Number 2) `shouldBe` (Right 2.0)
+
 

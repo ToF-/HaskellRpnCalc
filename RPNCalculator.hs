@@ -4,6 +4,8 @@ where
 type Calculator = [Double]
 data Operation = Number Double
 
+infixl 5 -:
+
 calculator = []
 
 result :: Calculator -> Either String Double 
