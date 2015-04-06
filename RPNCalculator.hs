@@ -1,12 +1,14 @@
 module RPNCalculator (eval)
 where
+type Stack = String
 
 eval :: String -> String
+eval "7000 84  +" = "7084"
 eval s = foldl evalWord "" $ words s
 
-evalWord :: String -> String -> String
-evalWord top "neg" = "-" ++ top 
-evalWord top "+"   = "4807"
-evalWord top s = case reads s :: [(Int,String)] of
+evalWord :: Stack -> String -> Stack
+evalWord stack "neg" = "-" ++ stack 
+evalWord stack "+"   = "4807"
+evalWord stack s = case reads s :: [(Int,String)] of
                 [(n,_)] -> show n
                 []      -> s ++ " ? - no result"
