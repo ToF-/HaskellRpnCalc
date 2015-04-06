@@ -19,13 +19,15 @@ oper :: String -> Stack -> Stack
 oper "neg" = unary negate  
 oper "+"  = binary (+) 
 oper "*"  = binary (*) 
+oper "-"  = binary (-)
+oper "/"  = binary div
 oper s = evalError (s ++ " ? - no result")
 
 evalError :: String -> Stack -> Stack
 evalError s _ = Left s
 
 binary :: (Int -> Int -> Int) -> Stack -> Stack
-binary f (Right (n:m:ns)) = Right (f n m:ns)
+binary f (Right (n:m:ns)) = Right (f m n:ns)
 
 unary :: (Int -> Int) -> Stack -> Stack
 unary f (Right (n:ns)) = Right (f n:ns)

@@ -25,3 +25,4 @@ main = hspec $ do
 
         it "should support subtraction and division" $ do
             eval "4807 807 -" `shouldBe` "4000"
+            eval "4800 100 /"  `shouldBe` "48"
