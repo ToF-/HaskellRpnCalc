@@ -22,3 +22,6 @@ main = hspec $ do
             eval "4000 807 +" `shouldBe` "4807"
             eval "7000 84  +" `shouldBe` "7084"
             eval "48 100 * 7 +" `shouldBe` "4807"
+
+        it "should support subtraction and division" $ do
+            eval "4807 807 -" `shouldBe` "4000"
