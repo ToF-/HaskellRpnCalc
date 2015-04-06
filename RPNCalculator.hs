@@ -13,6 +13,7 @@ evalWord st s = case reads s :: [(Int,String)] of
     []      -> oper s st
 
 push :: Stack -> Int -> Stack
+push (Left m) _ = Left m
 push (Right ns) n = Right (n:ns)
 
 oper :: String -> Stack -> Stack
@@ -24,9 +25,11 @@ oper "/"  = binary div
 oper s = evalError (s ++ " ? - no result")
 
 evalError :: String -> Stack -> Stack
+evalError s (Left m) = Left m
 evalError s _ = Left s
 
 binary :: (Int -> Int -> Int) -> Stack -> Stack
+binary f (Left m) = Left m
 binary f (Right [_]) = Left "not enough parameters - no result"
 binary f (Right (n:m:ns)) = Right (f m n:ns)
 

@@ -30,3 +30,7 @@ main = hspec $ do
         it "should inspect stack size" $ do
             eval "neg" `shouldBe` "not enough parameters - no result"
             eval "48 +" `shouldBe` "not enough parameters - no result"
+
+        it "should propagate error" $ do
+            eval "neg 4 2 +" `shouldBe` "not enough parameters - no result"
+            eval "4 + foo" `shouldBe` "not enough parameters - no result"
