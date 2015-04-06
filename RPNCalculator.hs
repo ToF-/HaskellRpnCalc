@@ -17,22 +17,27 @@ push (Left m) _ = Left m
 push (Right ns) n = Right (n:ns)
 
 oper :: String -> Stack -> Stack
-oper "neg" = unary negate  
-oper "+"  = binary (+) 
-oper "*"  = binary (*) 
-oper "-"  = binary (-)
-oper "/"  = binary div
-oper s = evalError (s ++ " ? - no result")
+oper "neg" st = unary negate st
+oper "+"  st = binary st (+) 
+oper "*"  st = binary st (*) 
+oper "-"  st = binary st (-) 
+oper "/"  st = binary st div 
+oper s st = evalError (s ++ " ? - no result") st 
 
 evalError :: String -> Stack -> Stack
 evalError s (Left m) = Left m
 evalError s _ = Left s
 
-binary :: (Int -> Int -> Int) -> Stack -> Stack
-binary f (Left m) = Left m
-binary f (Right [_]) = Left "not enough parameters - no result"
-binary f (Right (n:m:ns)) = Right (f m n:ns)
+binary :: Stack -> (Int -> Int -> Int) -> Stack
+binary (Left m) f = Left m
+binary (Right [_]) f = Left "not enough parameters - no result"
+binary (Right (n:m:ns)) f = Right (f m n:ns)
 
 unary :: (Int -> Int) -> Stack -> Stack
 unary f (Right []) = Left "not enough parameters - no result"
 unary f (Right (n:ns)) = Right (f n:ns)
+
+inspect :: Int -> Stack -> Stack
+inspect 1 (Right []) = Left "not enough parameters - no result"
+inspect 2 (Right [_])= Left "not enough parameters - no result"
+inspect _ st = st
