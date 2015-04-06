@@ -17,3 +17,6 @@ main = hspec $ do
         it "should support an unary operation" $ do
             eval "4807 neg" `shouldBe` "-4807"
             eval "7084 neg" `shouldBe` "-7084"
+
+        it "should support a binary operation" $ do
+            eval "4000 807 +" `shouldBe`  "4807"
