@@ -8,9 +8,15 @@ eval s = case foldl evalWord (Right []) $ words s of
             Left m       -> m
 
 evalWord :: Stack -> String -> Stack
-evalWord (Right (n:ns))  "neg" = Right (-n:ns)  
-evalWord (Right (n:m:ns)) "+"  = Right (n+m:ns)
-evalWord (Right (n:m:ns)) "*"  = Right (n*m:ns)
-evalWord (Right ns) s = case reads s :: [(Int,String)] of
-                [(n,_)] -> Right (n:ns)
-                []      -> Left (s ++ " ? - no result")
+evalWord st s = case reads s :: [(Int,String)] of
+    [(n,_)] -> push st n
+    []      -> oper st s
+
+push :: Stack -> Int -> Stack
+push (Right ns) n = Right (n:ns)
+
+oper :: Stack -> String -> Stack
+oper (Right (n:ns))  "neg" = Right (-n:ns)  
+oper (Right (n:m:ns)) "+"  = Right (n+m:ns)
+oper (Right (n:m:ns)) "*"  = Right (n*m:ns)
+oper (Right _) s = Left (s ++ " ? - no result")
