@@ -16,10 +16,13 @@ push :: Stack -> Int -> Stack
 push (Right ns) n = Right (n:ns)
 
 oper :: Stack -> String -> Stack
-oper (Right (n:ns))  "neg" = Right (-n:ns)  
+oper st "neg" = unary negate st 
 oper st "+"  = binary (+) st
-oper (Right (n:m:ns)) "*"  = Right (n*m:ns)
+oper st "*"  = binary (*) st
 oper (Right _) s = Left (s ++ " ? - no result")
 
 binary :: (Int -> Int -> Int) -> Stack -> Stack
 binary f (Right (n:m:ns)) = Right (f n m:ns)
+
+unary :: (Int -> Int) -> Stack -> Stack
+unary f (Right (n:ns)) = Right (f n:ns)
