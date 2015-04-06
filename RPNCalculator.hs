@@ -2,7 +2,6 @@ module RPNCalculator (eval)
 where
 
 eval :: String -> String
-eval "4807 6502" = "6502"
 eval s = last $ map evalWord $ words s
 
 evalWord :: String -> String
