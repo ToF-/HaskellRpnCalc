@@ -13,3 +13,6 @@ main = hspec $ do
 
         it "should output the top of the stack only" $ do
             eval "4807 6502" `shouldBe` "6502"
+
+        it "should support an unary operation" $ do
+            eval "4807 neg" `shouldBe` "-4807"
