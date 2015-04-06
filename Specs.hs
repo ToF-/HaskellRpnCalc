@@ -10,3 +10,6 @@ main = hspec $ do
         it "should signal an incorrect entry" $ do
             eval "foo" `shouldBe` "foo ? - no result"
             eval "bar" `shouldBe` "bar ? - no result"
+
+        it "should output the top of the stack only" $ do
+            eval "4807 6502" `shouldBe` "6502"
