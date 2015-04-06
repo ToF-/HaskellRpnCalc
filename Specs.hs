@@ -21,3 +21,4 @@ main = hspec $ do
         it "should support a binary operation" $ do
             eval "4000 807 +" `shouldBe` "4807"
             eval "7000 84  +" `shouldBe` "7084"
+            eval "48 100 * 7 +" `shouldBe` "4807"
