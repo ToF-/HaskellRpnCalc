@@ -10,16 +10,19 @@ eval s = case foldl evalWord (Right []) $ words s of
 evalWord :: Stack -> String -> Stack
 evalWord st s = case reads s :: [(Int,String)] of
     [(n,_)] -> push st n
-    []      -> oper st s
+    []      -> oper s st
 
 push :: Stack -> Int -> Stack
 push (Right ns) n = Right (n:ns)
 
-oper :: Stack -> String -> Stack
-oper st "neg" = unary negate st 
-oper st "+"  = binary (+) st
-oper st "*"  = binary (*) st
-oper (Right _) s = Left (s ++ " ? - no result")
+oper :: String -> Stack -> Stack
+oper "neg" = unary negate  
+oper "+"  = binary (+) 
+oper "*"  = binary (*) 
+oper s = evalError (s ++ " ? - no result")
+
+evalError :: String -> Stack -> Stack
+evalError s _ = Left s
 
 binary :: (Int -> Int -> Int) -> Stack -> Stack
 binary f (Right (n:m:ns)) = Right (f n m:ns)
