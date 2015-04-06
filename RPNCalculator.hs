@@ -27,7 +27,9 @@ evalError :: String -> Stack -> Stack
 evalError s _ = Left s
 
 binary :: (Int -> Int -> Int) -> Stack -> Stack
+binary f (Right [_]) = Left "not enough parameters - no result"
 binary f (Right (n:m:ns)) = Right (f m n:ns)
 
 unary :: (Int -> Int) -> Stack -> Stack
+unary f (Right []) = Left "not enough parameters - no result"
 unary f (Right (n:ns)) = Right (f n:ns)

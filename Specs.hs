@@ -26,3 +26,7 @@ main = hspec $ do
         it "should support subtraction and division" $ do
             eval "4807 807 -" `shouldBe` "4000"
             eval "4800 100 /"  `shouldBe` "48"
+
+        it "should inspect stack size" $ do
+            eval "neg" `shouldBe` "not enough parameters - no result"
+            eval "48 +" `shouldBe` "not enough parameters - no result"
