@@ -4,13 +4,12 @@ import Control.Monad
 
 type Stack = [Double]
 type Calculator = Either String Stack
+type Result = Either String Double
 
+calculator :: Calculator
 calculator = Right []
 
-result :: Calculator -> Either String Double 
-result c = c >>= pop
-
-pop :: Stack -> Either String Double
+pop :: Stack -> Result
 pop [] = Left "stack is empty - no result"
 pop (n:_) = Right n
 
