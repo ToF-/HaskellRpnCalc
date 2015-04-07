@@ -37,3 +37,6 @@ inspect :: Int -> Stack -> Calculator
 inspect 2 st@(n:m:ns) = return st 
 inspect 1 st@(n:ns) = return st 
 inspect _ st = err "not enough parameters" st
+
+cmd :: String -> Stack -> Calculator
+cmd "neg" = unary negate

@@ -41,7 +41,11 @@ main = hspec $ do
                 (Left "not enough parameters - no result")
             (calc >>= binary (+)) `shouldBe`
                 (Left "not enough parameters - no result")
-                
-                
-            
-        
+
+        it "should evaluate a commande" $ do
+            (calc >>= push 1 >>= cmd "neg") `shouldBe`
+                (Right [-1])
+               
+              
+           
+       
