@@ -54,5 +54,6 @@ main = hspec $ do
               
         it "should eval sequences of commands" $ do
             (calc >>= eval "4 3 *") `shouldBe` Right [12]
+            (calc >>= eval "4 bar *") `shouldBe` Left "bar ? - no result"
 
             
