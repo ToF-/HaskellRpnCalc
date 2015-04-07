@@ -13,7 +13,11 @@ err :: String -> Stack -> Calculator
 err s _ = Left s
 
 unary :: (Int -> Int) -> Stack -> Calculator
-unary = unary'
+unary f st = inspect 1 st >>= unary' f 
+
+inspect :: Int -> Stack -> Calculator
+inspect 1 (n:ns) = Right (n:ns)
+inspect 1 _ = Left "not enough parameters - no result"
 
 unary' :: (Int -> Int) -> Stack -> Calculator
 unary' f (n:ns) = Right (f n:ns)
