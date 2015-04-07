@@ -60,4 +60,5 @@ main = hspec $ do
             process calc ["4","3 2 *","+"] `shouldBe`
                 ["Right [4]","Right [6,4]","Right [10]"]
 
-            
+        it "allows for clearing stack" $ do
+            (calc >>= push 4 >>= clear) `shouldBe` (Right [])   

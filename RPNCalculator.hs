@@ -8,6 +8,9 @@ type Calculator = Either String Stack
 calc :: Calculator
 calc = Right []
 
+clear :: Stack -> Calculator 
+clear _ = calc
+
 push :: Int -> Stack -> Calculator
 push n st = Right (n:st)
 
