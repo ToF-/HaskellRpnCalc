@@ -33,4 +33,7 @@ safeBinary f (n:m:ns) = Right (f m n:ns)
 cmd :: String -> Stack -> Calculator
 cmd "neg" = unary negate 
 cmd "+"   = binary (+)
+cmd "-"   = binary (-)
+cmd "*"   = binary (*)
+cmd "/"   = binary div
 
