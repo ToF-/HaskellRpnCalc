@@ -62,3 +62,4 @@ main = hspec $ do
 
         it "allows for clearing stack" $ do
             (calc >>= push 4 >>= clear) `shouldBe` (Right [])   
+            (calc >>= eval "4 clear") `shouldBe` (Right [])
