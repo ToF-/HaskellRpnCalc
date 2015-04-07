@@ -1,15 +1,17 @@
 module RPNCalculator
 where
+type Stack = [Int]
+type Calculator = Either String Stack
 
-push :: Int -> [Int] -> Either String [Int]
+push :: Int -> Stack -> Calculator
 push n st = Right (n:st)
 
-err :: String -> [Int] -> Either String [Int]
+err :: String -> Stack -> Calculator
 err s _ = Left s
 
-unary :: (Int -> Int) -> [Int] -> Either String [Int]
+unary :: (Int -> Int) -> Stack -> Calculator
 unary f (n:ns) = Right (f n:ns)
 
-binary :: (Int -> Int -> Int) -> [Int] -> Either String [Int]
+binary :: (Int -> Int -> Int) -> Stack -> Calculator
 binary f (n:m:ns) = Right (f m n:ns)
 
