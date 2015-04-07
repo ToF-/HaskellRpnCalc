@@ -9,9 +9,13 @@ main = hspec $ do
             err "foo" [] `shouldBe` (Left "foo - no result")
 
         it "should allow for multiple pushes" $ do
-            (push 4 [] >>= push 7) `shouldBe` (Right [7,4])
+            (calc >>= push 4 >>= push 7) `shouldBe` (Right [7,4])
 
         it "should have an initial state" $ do
             calc `shouldBe` (Right [])
+
+        it "should propagate error" $ do
+            (calc >>= err "bar" >>= push 3) `shouldBe`
+                (Left "bar - no result")
             
         
