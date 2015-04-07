@@ -1,9 +1,10 @@
 module RPNCalculator
 where
 
-push :: Int -> [Int] -> [Int]
-push = (:)
+push :: Int -> [Int] -> Either String [Int]
+push n ns = Right $ n:ns
 
 
-err :: String -> String
-err s = s ++ " - no result"
+err :: String -> [Int] -> Either String [Int]
+err s ns = Left $ s ++ " - no result"
+

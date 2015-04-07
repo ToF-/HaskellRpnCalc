@@ -3,10 +3,9 @@ import RPNCalculator
 
 main = hspec $ do
     describe "a RPN calculator" $ do
-        it "should allow pushing numbers" $ do
-            push 4807 [] `shouldBe` [4807]
-        
-        it "should allow for errors to happen" $ do
-            err "foo" `shouldBe` "foo - no result"
+
+        it "should allow for both numbers and message" $ do
+            push 42 []   `shouldBe` (Right [42])
+            err "bar" [] `shouldBe` (Left "foo - no result")
             
         
