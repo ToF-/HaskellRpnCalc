@@ -29,7 +29,9 @@ unary f st = inspect 1 st >>= safeUnary f
     safeUnary f (n:ns) = push (f n) ns 
 
 binary :: (Int -> Int -> Int) -> Stack -> Calculator
-binary f (n:m:ns) = push (f m n) ns
+binary f st = inspect 2 st >>= safeBinary f
+    where
+    safeBinary f (n:m:ns) = push (f m n) ns
 
 inspect :: Int -> Stack -> Calculator
 inspect 2 st@(n:m:ns) = return st 

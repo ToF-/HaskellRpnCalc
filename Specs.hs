@@ -39,6 +39,8 @@ main = hspec $ do
         it "should inspect stack before operation" $ do
             (calc >>= unary negate) `shouldBe`
                 (Left "not enough parameters - no result")
+            (calc >>= binary (+)) `shouldBe`
+                (Left "not enough parameters - no result")
                 
                 
             
