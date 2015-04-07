@@ -24,7 +24,9 @@ err :: String -> Stack -> Calculator
 err s ns = Left $ s ++ " - no result"
 
 unary :: (Int -> Int) -> Stack -> Calculator
-unary f (n:ns) = push (f n) ns 
+unary f st = inspect 1 st >>= safeUnary f 
+    where
+    safeUnary f (n:ns) = push (f n) ns 
 
 binary :: (Int -> Int -> Int) -> Stack -> Calculator
 binary f (n:m:ns) = push (f m n) ns

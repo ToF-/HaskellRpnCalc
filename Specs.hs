@@ -35,6 +35,10 @@ main = hspec $ do
             (calc >>= push 3 >>= inspect 1) `shouldBe` (Right [3])
             (calc >>= push 1 >>= inspect 2) `shouldBe` 
                 (Left "not enough parameters - no result")
+
+        it "should inspect stack before operation" $ do
+            (calc >>= unary negate) `shouldBe`
+                (Left "not enough parameters - no result")
                 
                 
             
