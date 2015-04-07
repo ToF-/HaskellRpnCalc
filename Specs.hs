@@ -16,3 +16,8 @@ main = hspec $ do
              err "foo" >>=
              push 42   >>=
              push 100) `shouldBe` Left "foo"
+
+        it "should support unary operation" $ do
+            (Right []  >>=
+             push 4807 >>=
+             unary negate) `shouldBe` Right [-4807]
