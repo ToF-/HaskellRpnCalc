@@ -30,5 +30,6 @@ binary :: (Int -> Int -> Int) -> Stack -> Calculator
 binary f (n:m:ns) = push (f m n) ns
 
 inspect :: Int -> Stack -> Calculator
-inspect 1 [] = err "not enough parameters" []
-inspect 1 ns = return ns 
+inspect 2 st@(n:m:ns) = return st 
+inspect 1 st@(n:ns) = return st 
+inspect _ st = err "not enough parameters" st
