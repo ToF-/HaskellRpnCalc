@@ -6,6 +6,6 @@ main = hspec $ do
 
         it "should allow for both numbers and message" $ do
             push 42 []   `shouldBe` (Right [42])
-            err "bar" [] `shouldBe` (Left "foo - no result")
+            err "foo" [] `shouldBe` (Left "foo - no result")
             
         

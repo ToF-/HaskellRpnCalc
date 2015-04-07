@@ -1,10 +1,13 @@
 module RPNCalculator
 where
 
-push :: Int -> [Int] -> Either String [Int]
+type Stack = [Int]
+type Calculator = Either String Stack
+
+push :: Int -> Stack -> Calculator
 push n ns = Right $ n:ns
 
 
-err :: String -> [Int] -> Either String [Int]
+err :: String -> Stack -> Calculator
 err s ns = Left $ s ++ " - no result"
 
