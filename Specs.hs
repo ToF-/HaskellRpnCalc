@@ -56,4 +56,8 @@ main = hspec $ do
             (calc >>= eval "4 3 *") `shouldBe` Right [12]
             (calc >>= eval "4 bar *") `shouldBe` Left "bar ? - no result"
 
+        it "should show each result" $ do
+            process calc ["4","3 2 *","+"] `shouldBe`
+                ["Right [4]","Right [6,4]","Right [10]"]
+
             

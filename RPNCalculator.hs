@@ -45,3 +45,8 @@ cmd s     = case reads s :: [(Int,String)] of
 eval :: String -> Stack -> Calculator
 eval s st = foldM (flip cmd) st $ words s
 
+process :: Calculator -> [String] -> [String]
+process c [] = []
+process c (s:ss) = 
+    let c' = c >>= eval s
+    in show c' : process c' ss    
