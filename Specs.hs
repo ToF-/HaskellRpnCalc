@@ -45,6 +45,10 @@ main = hspec $ do
             (calc   >>=
              push 4 >>=
              cmd "neg") `shouldBe` Right [-4]
+            (calc   >>=
+             push 4 >>=
+             push 3 >>=
+             cmd "+")   `shouldBe` Right [7]
               
 
             
