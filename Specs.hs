@@ -7,5 +7,8 @@ main = hspec $ do
         it "should allow for both numbers and message" $ do
             push 42 []   `shouldBe` (Right [42])
             err "foo" [] `shouldBe` (Left "foo - no result")
+
+        it "should allow for multiple pushes" $ do
+            (push 4 [] >>= push 7) `shouldBe` (Right [7,4])
             
         
