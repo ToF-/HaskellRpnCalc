@@ -28,4 +28,9 @@ main = hspec $ do
              push 3   >>=
              binary (-)) `shouldBe` Right [1]
 
+        it "should inspect the stack size" $ do
+            (calc   >>=
+             push 4 >>=
+             binary (+)) `shouldBe` Left "not enough parameters - no result"
+
             

@@ -17,4 +17,5 @@ unary f (n:ns) = Right (f n:ns)
 
 binary :: (Int -> Int -> Int) -> Stack -> Calculator
 binary f (n:m:ns) = Right (f m n:ns)
+binary _ _ = Left "not enough parameters - no result"
 
