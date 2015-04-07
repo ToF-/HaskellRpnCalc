@@ -30,3 +30,6 @@ safeBinary :: (Int -> Int -> Int) -> Stack -> Calculator
 safeBinary div (0:_) = Left "division by zero - no result"
 safeBinary f (n:m:ns) = Right (f m n:ns)
 
+cmd :: String -> Stack -> Calculator
+cmd "neg" = unary negate 
+

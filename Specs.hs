@@ -41,4 +41,10 @@ main = hspec $ do
              push 0 >>=
              binary div) `shouldBe` Left "division by zero - no result"
 
+        it "should convert a string into a command" $ do
+            (calc   >>=
+             push 4 >>=
+             cmd "neg") `shouldBe` Right [-4]
+              
+
             
