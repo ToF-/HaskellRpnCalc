@@ -36,4 +36,7 @@ cmd "+"   = binary (+)
 cmd "-"   = binary (-)
 cmd "*"   = binary (*)
 cmd "/"   = binary div
+cmd s     = case reads s :: [(Int,String)] of
+                [(n,_)] -> push n
+                []      -> err (s ++ " ?")
 
