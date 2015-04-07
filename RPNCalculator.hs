@@ -23,3 +23,5 @@ push n ns = Right $ n:ns
 err :: String -> Stack -> Calculator
 err s ns = Left $ s ++ " - no result"
 
+unary :: (Int -> Int) -> Stack -> Calculator
+unary f (n:ns) = push (f n) ns 

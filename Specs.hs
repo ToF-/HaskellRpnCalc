@@ -17,5 +17,9 @@ main = hspec $ do
         it "should propagate error" $ do
             (calc >>= err "bar" >>= push 3) `shouldBe`
                 (Left "bar - no result")
+
+        it "should allow for unary operations" $ do
+            (calc >>= push 5 >>= unary negate) `shouldBe`
+                (Right [-5])
             
         
