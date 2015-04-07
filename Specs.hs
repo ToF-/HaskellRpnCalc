@@ -21,5 +21,8 @@ main = hspec $ do
         it "should allow for unary operations" $ do
             (calc >>= push 5 >>= unary negate) `shouldBe`
                 (Right [-5])
+
+            (calc >>= push 6 >>= unary (+1)) `shouldBe`
+                (Right [7])
             
         
