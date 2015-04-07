@@ -3,6 +3,9 @@ where
 type Stack = [Int]
 type Calculator = Either String Stack
 
+calc :: Calculator
+calc = Right []
+
 push :: Int -> Stack -> Calculator
 push n st = Right (n:st)
 
