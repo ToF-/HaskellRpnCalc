@@ -11,11 +11,11 @@ main = hspec $ do
              push 3) `shouldBe` Right [3,2,1]
 
         it "should propagate an error" $ do
-            err "woot!" [] `shouldBe` Left "woot!"
+            err "woot!" [] `shouldBe` Left "woot! - no result"
             (calc  >>=
              err "foo" >>=
              push 42   >>=
-             push 100) `shouldBe` Left "foo"
+             push 100) `shouldBe` Left "foo - no result"
 
         it "should support unary operation" $ do
             (calc  >>=
@@ -41,8 +41,9 @@ main = hspec $ do
              push 0 >>=
              binary div) `shouldBe` Left "division by zero - no result"
 
-        it "should convert unkown string into number" $ do
+        it "should convert unkown string into number or err" $ do
             (calc >>= cmd "-4807") `shouldBe` Right [-4807]
+            (calc >>= cmd "foo") `shouldBe` Left "foo ? - no result"
 
         it "should convert a string into a command" $ do
             (calc   >>= push 4 >>= cmd "neg") `shouldBe` Right [-4]
