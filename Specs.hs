@@ -58,8 +58,12 @@ main = hspec $ do
 
         it "should show each result" $ do
             process calc ["4","3 2 *","+"] `shouldBe`
-                ["Right [4]","Right [6,4]","Right [10]"]
+                ["[4]","[6,4]","[10]"]
 
         it "allows for clearing stack" $ do
             (calc >>= push 4 >>= clear) `shouldBe` (Right [])   
             (calc >>= eval "4 clear") `shouldBe` (Right [])
+
+        it "clear stack after error" $ do
+            process calc ["4 foo","3"] `shouldBe`
+                ["foo ? - no result","[3]"]

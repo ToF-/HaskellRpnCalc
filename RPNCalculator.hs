@@ -36,7 +36,7 @@ safeBinary div (0:ns) = err "division by zero" (0:ns)
 safeBinary f (n:m:ns) = Right (f m n:ns)
 
 cmd :: String -> Stack -> Calculator
-cmd "clear" = clear
+cmd "clear" = const calc
 cmd "neg" = unary negate 
 cmd "+"   = binary (+)
 cmd "-"   = binary (-)
@@ -51,7 +51,7 @@ eval s st = foldM (flip cmd) st $ words s
 
 process :: Calculator -> [String] -> [String]
 process c [] = []
-process c (s:ss) = 
-    let c' = c >>= eval s
-    in show c' : process c' ss    
+process c (s:ss) = case c >>= eval s of 
+                Left  m -> m : process calc ss
+                Right st -> show st : process (Right st) ss 
 
