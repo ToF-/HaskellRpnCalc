@@ -4,6 +4,15 @@ where
 type Stack = [Int]
 type Calculator = Either String Stack
 
+{-- remember that:
+
+instance Monad (Either a) where
+    return x = Right x
+    val >>= f = case val of
+        Left err -> Left err
+        Right x -> f x
+--}
+
 calc :: Calculator
 calc = Right []
 
