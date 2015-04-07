@@ -14,7 +14,7 @@ instance Monad (Either a) where
 --}
 
 calc :: Calculator
-calc = Right []
+calc = return []
 
 push :: Int -> Stack -> Calculator
 push n ns = Right $ n:ns
@@ -28,3 +28,7 @@ unary f (n:ns) = push (f n) ns
 
 binary :: (Int -> Int -> Int) -> Stack -> Calculator
 binary f (n:m:ns) = push (f m n) ns
+
+inspect :: Int -> Stack -> Calculator
+inspect 1 [] = err "not enough parameters" []
+inspect 1 ns = return ns 
