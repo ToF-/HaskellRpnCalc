@@ -27,5 +27,6 @@ safeUnary :: (Int -> Int) -> Stack -> Calculator
 safeUnary f (n:ns) = Right (f n:ns)
 
 safeBinary :: (Int -> Int -> Int) -> Stack -> Calculator
+safeBinary div (0:_) = Left "division by zero - no result"
 safeBinary f (n:m:ns) = Right (f m n:ns)
 

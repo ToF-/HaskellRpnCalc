@@ -35,4 +35,10 @@ main = hspec $ do
             (calc   >>=
              unary negate) `shouldBe` Left "not enough parameters - no result"
 
+        it "should detect a division by zero" $ do
+            (calc   >>=
+             push 4 >>=
+             push 0 >>=
+             binary div) `shouldBe` Left "division by zero - no result"
+
             
