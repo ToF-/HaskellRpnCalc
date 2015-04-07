@@ -52,5 +52,7 @@ main = hspec $ do
             (calc   >>= push 4 >>= push 3 >>= cmd "*") `shouldBe` Right [12]
             (calc   >>= push 6 >>= push 3 >>= cmd "/") `shouldBe` Right [2]
               
+        it "should eval sequences of commands" $ do
+            (calc >>= eval "4 3 *") `shouldBe` Right [12]
 
             

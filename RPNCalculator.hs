@@ -1,5 +1,7 @@
 module RPNCalculator
 where
+import Control.Monad (foldM)
+
 type Stack = [Int]
 type Calculator = Either String Stack
 
@@ -39,4 +41,7 @@ cmd "/"   = binary div
 cmd s     = case reads s :: [(Int,String)] of
                 [(n,_)] -> push n
                 []      -> err (s ++ " ?")
+
+eval :: String -> Stack -> Calculator
+eval s st = foldM (flip cmd) st $ words s
 
