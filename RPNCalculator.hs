@@ -25,3 +25,6 @@ err s ns = Left $ s ++ " - no result"
 
 unary :: (Int -> Int) -> Stack -> Calculator
 unary f (n:ns) = push (f n) ns 
+
+binary :: (Int -> Int -> Int) -> Stack -> Calculator
+binary f (n:m:ns) = push (f m n) ns

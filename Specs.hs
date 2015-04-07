@@ -24,5 +24,9 @@ main = hspec $ do
 
             (calc >>= push 6 >>= unary (+1)) `shouldBe`
                 (Right [7])
+
+        it "should allow for binary operation" $ do
+            (calc >>= push 9 >>= push 7 >>= binary (-))
+            `shouldBe` (Right [2])
             
         
