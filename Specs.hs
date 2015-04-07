@@ -32,5 +32,7 @@ main = hspec $ do
             (calc   >>=
              push 4 >>=
              binary (+)) `shouldBe` Left "not enough parameters - no result"
+            (calc   >>=
+             unary negate) `shouldBe` Left "not enough parameters - no result"
 
             

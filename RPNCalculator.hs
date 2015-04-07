@@ -13,7 +13,11 @@ err :: String -> Stack -> Calculator
 err s _ = Left s
 
 unary :: (Int -> Int) -> Stack -> Calculator
-unary f (n:ns) = Right (f n:ns)
+unary = unary'
+
+unary' :: (Int -> Int) -> Stack -> Calculator
+unary' f (n:ns) = Right (f n:ns)
+unary' _ _ = Left "not enough parameters - no result"
 
 binary :: (Int -> Int -> Int) -> Stack -> Calculator
 binary f (n:m:ns) = Right (f m n:ns)
