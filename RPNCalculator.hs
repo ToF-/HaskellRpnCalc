@@ -9,3 +9,7 @@ err s _ = Left s
 
 unary :: (Int -> Int) -> [Int] -> Either String [Int]
 unary f (n:ns) = Right (f n:ns)
+
+binary :: (Int -> Int -> Int) -> [Int] -> Either String [Int]
+binary f (n:m:ns) = Right (f m n:ns)
+

@@ -21,3 +21,9 @@ main = hspec $ do
             (Right []  >>=
              push 4807 >>=
              unary negate) `shouldBe` Right [-4807]
+
+        it "should support binary operation" $ do
+            (Right [] >>=
+             push 4   >>=
+             push 3   >>=
+             binary (-)) `shouldBe` Right [1]
