@@ -5,3 +5,7 @@ main = hspec $ do
     describe "calc" $ do
         it "can read a number" $ do
             calc "4807" `shouldBe` "4807"
+
+
+        it "signals an error" $ do
+            calc "foo" `shouldBe` "foo ??"
