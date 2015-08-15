@@ -32,5 +32,5 @@ calc = result . foldl (>>=) initial . map parse . tokens
         []      -> Left  . const (s ++ " ??")
 
     binary :: (Number -> Number -> Number) -> Stack -> Calc
-    binary f = Right . (\[n,m] -> [f n m])
+    binary f = Right . (\(n:m:ns) -> (f n m:ns))
     
