@@ -6,13 +6,13 @@ type Number = Int
 type Message = String
 
 calc :: String -> String
-calc = result . foldl eval initial .  words
+calc = result . foldl eval initial . map parse . words
     where initial = Right 0
           result (Right n) = show n
           result (Left m)  = m
 
-eval :: Calc -> String -> Calc
-eval c = (>>=) c . parse 
+eval :: Calc -> (Number -> Calc) -> Calc
+eval c f = c >>= f 
 
 parse :: String -> Number -> Calc
 parse s = case reads s :: [(Number,String)] of
