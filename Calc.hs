@@ -16,6 +16,7 @@ calc = result . foldl (>>=) initial . map parse . words
     result (Left m)  = m
 
     parse :: String -> Number -> Calc
+    parse "~" = Right . negate
     parse s = case reads s :: [(Number,String)] of
         [(n,_)] -> Right . const n
         []      -> Left  . const (s ++ " ??")

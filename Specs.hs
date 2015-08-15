@@ -17,3 +17,7 @@ main = hspec $ do
 
         it "cancels evaluation after an error" $ do
             calc "bar 66" `shouldBe` "bar ??"
+
+
+        it "allows for unary operation like negate" $ do
+            calc "128 ~" `shouldBe` "-128"
