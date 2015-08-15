@@ -7,12 +7,16 @@ type Message = String
 
 calc :: String -> String
 calc = result . foldl (>>=) initial . map parse . words
-    where initial = Right 0
-          result (Right n) = show n
-          result (Left m)  = m
+    where
+    initial :: Calc 
+    initial = Right 0
 
-parse :: String -> Number -> Calc
-parse s = case reads s :: [(Number,String)] of
-    [(n,_)] -> Right . const n
-    []      -> Left  . const (s ++ " ??")
+    result :: Calc -> String
+    result (Right n) = show n
+    result (Left m)  = m
+
+    parse :: String -> Number -> Calc
+    parse s = case reads s :: [(Number,String)] of
+        [(n,_)] -> Right . const n
+        []      -> Left  . const (s ++ " ??")
     
