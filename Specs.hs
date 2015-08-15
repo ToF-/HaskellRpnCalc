@@ -13,3 +13,7 @@ main = hspec $ do
 
         it "can read several numbers" $ do
             calc "17 42" `shouldBe` "42"
+
+
+        it "cancels evaluation after an error" $ do
+            calc "bar 66" `shouldBe` "bar ??"
