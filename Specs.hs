@@ -37,4 +37,9 @@ main = hspec $ do
             calc "3+"  `shouldBe` "not enough parameters"
             calc "+"   `shouldBe` "not enough parameters"
 
+        it "performs division and subtraction" $ do
+            calc "23 5-" `shouldBe` "18"
+            calc "23 5/" `shouldBe` "4"
+            calc "23 5%" `shouldBe` "3"
+
 

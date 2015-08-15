@@ -26,7 +26,10 @@ calc = result . foldl (>>=) initial . map parse . tokens
     parse " " = Right . id
     parse "~" = unary negate
     parse "+" = binary (+) 
+    parse "-" = binary (flip (-)) 
     parse "*" = binary (*)
+    parse "/" = binary (flip div)
+    parse "%" = binary (flip mod)
     parse s = case reads s :: [(Number,String)] of
         [(n,_)] -> Right . (n:)
         []      -> Left  . const (s ++ " ??")
@@ -35,11 +38,11 @@ calc = result . foldl (>>=) initial . map parse . tokens
     binary f st = do (n,st') <- pull st
                      unary (f n) st'
 
-    pull :: Stack -> Either Message (Number,Stack)
-    pull [] = Left "not enough parameters"
-    pull (n:ns) = Right (n,ns)
-    
     unary :: (Number -> Number) -> Stack -> Calc
     unary f st = do (n,st') <- pull st
                     Right (f n : st')
+    
+    pull :: Stack -> Either Message (Number,Stack)
+    pull [] = Left "not enough parameters"
+    pull (n:ns) = Right (n,ns)
     
