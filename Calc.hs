@@ -6,13 +6,16 @@ type Number = Int
 type Message = String
 
 calc :: String -> String
-calc = last . foldl eval initial .  words
+calc = result . foldl eval initial .  words
     where initial = Right 0
-          last (Right n) = show n
-          last (Left m)  = m
+          result (Right n) = show n
+          result (Left m)  = m
 
 eval :: Calc -> String -> Calc
-eval (Left m) _ = Left m
-eval (Right _) s = case reads s of
-    [(n,_)] -> Right n
-    []      -> Left $ s ++ " ??"
+eval c s = c >>= (parse s)
+
+parse :: String -> Number -> Calc
+parse s = case reads s :: [(Number,String)] of
+    [(n,_)] -> Right . const n
+    []      -> Left  . const (s ++ " ??")
+    
