@@ -7,6 +7,7 @@ type Calc = Either Message Stack
 type Stack = [Number]
 type Number = Int
 type Message = String
+type Operation = Stack -> Calc
 
 calc :: String -> String
 calc = result . foldl (>>=) initial . map parse . tokens
@@ -22,7 +23,7 @@ calc = result . foldl (>>=) initial . map parse . tokens
     result (Right st) = show (head st)
     result (Left m)  = m
 
-    parse :: String -> Stack -> Calc
+    parse :: String -> Operation
     parse " " = Right . id
     parse "~" = unary negate
     parse "+" = binary (+) 
@@ -34,13 +35,13 @@ calc = result . foldl (>>=) initial . map parse . tokens
         [(n,_)] -> Right . (n:)
         []      -> Left  . const (s ++ " ??")
 
-    binary :: (Number -> Number -> Number) -> Stack -> Calc
+    binary :: (Number -> Number -> Number) -> Operation
     binary f st = pull st >>= \(n,st') -> unary (f n) st'
 
-    unary :: (Number -> Number) -> Stack -> Calc
+    unary :: (Number -> Number) -> Operation
     unary f st = pull st >>= \(n,st') -> push (f n) st'
 
-    push :: Number -> Stack -> Calc
+    push :: Number -> Operation
     push n st = Right (n:st)
     
     pull :: Stack -> Either Message (Number,Stack)
