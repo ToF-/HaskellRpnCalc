@@ -35,12 +35,13 @@ calc = result . foldl (>>=) initial . map parse . tokens
         []      -> Left  . const (s ++ " ??")
 
     binary :: (Number -> Number -> Number) -> Stack -> Calc
-    binary f st = do (n,st') <- pull st
-                     unary (f n) st'
+    binary f st = pull st >>= \(n,st') -> unary (f n) st'
 
     unary :: (Number -> Number) -> Stack -> Calc
-    unary f st = do (n,st') <- pull st
-                    Right (f n : st')
+    unary f st = pull st >>= \(n,st') -> push (f n) st'
+
+    push :: Number -> Stack -> Calc
+    push n st = Right (n:st)
     
     pull :: Stack -> Either Message (Number,Stack)
     pull [] = Left "not enough parameters"
