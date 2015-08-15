@@ -26,7 +26,8 @@ calc = result . foldl (>>=) initial . map parse . tokens
     parse " " = Right . id
     parse "~" = Right . (\(n:st) -> negate n:st)
     parse "+" = Right . (\[n,m] -> [n+m])
+    parse "*" = Right . (\[n,m] -> [n*m])
     parse s = case reads s :: [(Number,String)] of
-        [(n,_)] -> Right . (\st -> n : st)
+        [(n,_)] -> Right . (n:)
         []      -> Left  . const (s ++ " ??")
     

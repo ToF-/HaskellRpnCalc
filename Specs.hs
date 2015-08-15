@@ -27,3 +27,6 @@ main = hspec $ do
 
         it "allows for binary operation like addition" $ do
             calc "32 17+"  `shouldBe` "49"
+
+        it "allows for multiplication" $ do
+            calc "3 15*" `shouldBe` "45"
