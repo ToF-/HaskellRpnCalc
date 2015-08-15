@@ -12,7 +12,7 @@ calc = result . foldl eval initial .  words
           result (Left m)  = m
 
 eval :: Calc -> String -> Calc
-eval c s = c >>= (parse s)
+eval c s = (>>=) c (parse s)
 
 parse :: String -> Number -> Calc
 parse s = case reads s :: [(Number,String)] of
