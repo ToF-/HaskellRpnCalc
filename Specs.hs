@@ -25,4 +25,5 @@ main = hspec $ do
         it "separates numbers and operators" $ do
             calc "321~" `shouldBe` "-321"
 
-
+        it "allows for binary operation like addition" $ do
+            calc "32 17+"  `shouldBe` "49"

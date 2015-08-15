@@ -3,7 +3,8 @@ where
 import Data.Char (isDigit)
 import Data.List (groupBy)
     
-type Calc = Either Message Number
+type Calc = Either Message Stack
+type Stack = [Number]
 type Number = Int
 type Message = String
 
@@ -15,16 +16,17 @@ calc = result . foldl (>>=) initial . map parse . tokens
         where digits c c' = isDigit c && isDigit c'
 
     initial :: Calc 
-    initial = Right 0
+    initial = Right []
 
     result :: Calc -> String
-    result (Right n) = show n
+    result (Right st) = show (head st)
     result (Left m)  = m
 
-    parse :: String -> Number -> Calc
+    parse :: String -> Stack -> Calc
     parse " " = Right . id
-    parse "~" = Right . negate
+    parse "~" = Right . (\(n:st) -> negate n:st)
+    parse "+" = Right . (\[n,m] -> [n+m])
     parse s = case reads s :: [(Number,String)] of
-        [(n,_)] -> Right . const n
+        [(n,_)] -> Right . (\st -> n : st)
         []      -> Left  . const (s ++ " ??")
     
