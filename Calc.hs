@@ -24,7 +24,7 @@ calc = result . foldl (>>=) initial . map parse . tokens
 
     parse :: String -> Stack -> Calc
     parse " " = Right . id
-    parse "~" = unary negate 
+    parse "~" = check (unary negate) 
     parse "+" = binary (+) 
     parse "*" = binary (*)
     parse s = case reads s :: [(Number,String)] of
@@ -37,3 +37,6 @@ calc = result . foldl (>>=) initial . map parse . tokens
     unary :: (Number -> Number) -> Stack -> Calc
     unary f = Right . (\(n:st) -> f n:st)
     
+    check :: (Stack -> Calc) -> Stack -> Calc
+    check f [] = Left "not enough parameters"
+    check f st = f st

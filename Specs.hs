@@ -29,3 +29,6 @@ main = hspec $ do
 
         it "allows for sequences of binary operations" $ do
             calc "2 3 4 *+"  `shouldBe` "14"
+
+        it "checks for arguments on the stack" $ do
+            calc "~"  `shouldBe` "not enough parameters"
