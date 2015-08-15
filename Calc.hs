@@ -25,9 +25,12 @@ calc = result . foldl (>>=) initial . map parse . tokens
     parse :: String -> Stack -> Calc
     parse " " = Right . id
     parse "~" = Right . (\(n:st) -> negate n:st)
-    parse "+" = Right . (\[n,m] -> [n+m])
-    parse "*" = Right . (\[n,m] -> [n*m])
+    parse "+" = binary (+) 
+    parse "*" = binary (*)
     parse s = case reads s :: [(Number,String)] of
         [(n,_)] -> Right . (n:)
         []      -> Left  . const (s ++ " ??")
+
+    binary :: (Number -> Number -> Number) -> Stack -> Calc
+    binary f = Right . (\[n,m] -> [f n m])
     
