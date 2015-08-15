@@ -9,3 +9,7 @@ main = hspec $ do
 
         it "signals an error" $ do
             calc "foo" `shouldBe` "foo ??"
+
+
+        it "can read several numbers" $ do
+            calc "17 42" `shouldBe` "42"
