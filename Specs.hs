@@ -8,7 +8,7 @@ main = hspec $ do
 
 
         it "signals an error" $ do
-            calc "foo" `shouldBe` "foo ??"
+            calc "foo" `shouldBe` "f ??"
 
 
         it "can read several numbers" $ do
@@ -16,8 +16,13 @@ main = hspec $ do
 
 
         it "cancels evaluation after an error" $ do
-            calc "bar 66" `shouldBe` "bar ??"
+            calc "bar 66" `shouldBe` "b ??"
 
 
         it "allows for unary operation like negate" $ do
             calc "128 ~" `shouldBe` "-128"
+
+        it "separates numbers and operators" $ do
+            calc "321~" `shouldBe` "-321"
+
+
