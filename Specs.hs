@@ -33,4 +33,6 @@ main = hspec $ do
         it "checks for arguments on the stack" $ do
             calc "~"  `shouldBe` "not enough parameters"
 
+        it "checks for 2 arguments for binary operation" $ do
+            calc "3+"  `shouldBe` "not enough parameters"
 
