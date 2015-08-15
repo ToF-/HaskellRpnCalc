@@ -32,3 +32,5 @@ main = hspec $ do
 
         it "checks for arguments on the stack" $ do
             calc "~"  `shouldBe` "not enough parameters"
+
+
