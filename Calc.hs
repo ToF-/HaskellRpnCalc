@@ -7,23 +7,27 @@ type Calc = Either Message Stack
 type Stack = [Number]
 type Number = Int
 type Message = String
+type Token = String
 type Operation = Stack -> Calc
 
 calc :: String -> String
-calc = result . foldl (>>=) initial . map parse . tokens
+calc = result . foldl execute initial . map parse . tokens
     where
-    tokens :: String -> [String]
+    tokens :: String -> [Token]
     tokens = groupBy digits
         where digits c c' = isDigit c && isDigit c'
 
     initial :: Calc 
     initial = Right []
 
+    execute :: Calc -> Operation -> Calc
+    execute = (>>=)
+
     result :: Calc -> String
     result (Right st) = show (head st)
     result (Left m)  = m
 
-    parse :: String -> Operation
+    parse :: Token -> Operation
     parse " " = Right . id
     parse "~" = unary negate
     parse "+" = binary (+) 
