@@ -3,6 +3,7 @@ where
 
 calc = show . foldl eval 0 . words
     where
-    eval x "neg" = negate x
-    eval x "abs" = abs x
-    eval x s     = read s
+    eval x s = unary s x
+    unary "neg" = negate
+    unary "abs" = abs
+    unary s     = const (read s)
