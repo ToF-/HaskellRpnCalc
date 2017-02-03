@@ -1,4 +1,8 @@
 module RpnCalc
 where
 
-calc = id
+calc = show . eval . words
+    where
+    eval [s,"neg"] = negate (read s) 
+    eval [s]       = read s
+
