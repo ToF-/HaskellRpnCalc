@@ -8,3 +8,6 @@ main = hspec $ do
             calc "-8" `shouldBe` "-8" 
         it "should allow unary operation" $ do
             calc "42 neg" `shouldBe` "-42"
+            calc "-5 abs" `shouldBe` "5"
+        it "should combine operations" $ do
+            calc "42 neg abs" `shouldBe` "42"
