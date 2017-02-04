@@ -1,35 +1,28 @@
 module RpnCalc
 where
+import Control.Monad
 
-type Calc = Either Message [Int]
+type Calc = Either Message Stack
+type Stack = [Int]
 type Message = String
 
-calc = result . foldl eval initial . words
+calc =  result . foldM eval [] . words
     where
-
-    result :: Calc -> String
-    result (Right x) = show (head x)
-    result (Left m)  = m
-
-    initial :: Calc
-    initial = Right []
-
-    eval :: Calc -> String -> Calc
-    eval x s = (unary s) x
-
-    unary :: String -> Calc -> Calc
-    unary "neg" c = c >>= pop >>= top negate
-    unary "abs" c = c >>= pop >>= top abs
-    unary s     c = c >>= parse s
-
-    parse :: String -> [Int] -> Calc
+    result = either id (show.head)
+    
+    eval :: Stack -> String -> Calc
+    eval st "neg" = pop st >>= top negate
+    eval st "abs" = pop st >>= top abs
+    eval st s     = parse s st
+     
+    parse :: String -> Stack -> Calc
     parse s ns = case reads s of
         [(n,_)] -> Right (n:ns)
         []      -> Left (s ++ "?")
 
-    top :: (Int -> Int) -> (Int,[Int]) -> Calc
+    top :: (Int -> Int) -> (Int,Stack) -> Calc
     top f (n,ns) = Right (f n:ns)
 
-    pop :: [Int] -> Either Message (Int,[Int])
+    pop :: Stack -> Either Message (Int,Stack)
     pop (n:ns) = Right (n,ns)
     pop []     = Left "missing parameter"
