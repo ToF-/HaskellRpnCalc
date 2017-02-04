@@ -11,3 +11,5 @@ main = hspec $ do
             calc "-5 abs" `shouldBe` "5"
         it "should combine operations" $ do
             calc "42 neg abs" `shouldBe` "42"
+        it "should deal with errors nicely" $ do
+            calc "foo" `shouldBe` "foo?"
