@@ -8,7 +8,7 @@ type Message = String
 
 calc =  result . foldM (flip eval) [] . words
     where
-    result = either id (show.head)
+    result c = either id (show.head) (c >>= unary id)
     
     eval :: String -> Stack -> Calc
     eval "neg" = unary negate

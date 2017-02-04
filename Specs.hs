@@ -15,3 +15,4 @@ main = hspec $ do
             calc "foo 43 neg" `shouldBe` "foo?"
         it "should check for missing parameters" $ do
             calc "neg" `shouldBe` "missing parameter"
+            calc "   " `shouldBe` "missing parameter"
