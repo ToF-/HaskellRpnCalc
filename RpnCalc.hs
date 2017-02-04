@@ -1,25 +1,31 @@
 module RpnCalc
 where
 
-type Calc = Either Message Int
+type Calc = Either Message [Int]
 type Message = String
 
 calc = result . foldl eval initial . words
     where
 
     result :: Calc -> String
-    result (Right x) = show x
+    result (Right x) = show (head x)
     result (Left m)  = m
 
     initial :: Calc
-    initial = Right 0
+    initial = Right []
 
     eval :: Calc -> String -> Calc
     eval x s = (unary s) x
 
     unary :: String -> (Calc -> Calc)
-    unary "neg" = fmap negate
-    unary "abs" = fmap abs
+    unary "neg" = \c -> case c of
+        (Right [n]) -> Right [negate n]
+        (Right [] ) -> Left "missing parameter"
+        Left m      -> Left m
+    unary "abs" = \c -> case c of
+        (Right [n]) -> Right [abs n]
+        (Right [] ) -> Left "missing parameter"
+        Left m      -> Left m
     unary s     = case reads s of
-        [(n,_)] -> fmap (const n)
+        [(n,_)] -> fmap (n:)
         []      -> const (Left (s ++ "?"))

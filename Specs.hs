@@ -12,4 +12,6 @@ main = hspec $ do
         it "should combine operations" $ do
             calc "42 neg abs" `shouldBe` "42"
         it "should deal with errors nicely" $ do
-            calc "foo" `shouldBe` "foo?"
+            calc "foo 43 neg" `shouldBe` "foo?"
+        it "should check for missing parameters" $ do
+            calc "neg" `shouldBe` "missing parameter"
