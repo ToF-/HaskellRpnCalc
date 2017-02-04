@@ -16,3 +16,6 @@ main = hspec $ do
         it "should check for missing parameters" $ do
             calc "neg" `shouldBe` "missing parameter"
             calc "   " `shouldBe` "missing parameter"
+        it "should allow for binary operation" $ do
+            calc "23 17 +" `shouldBe` "40"
+            calc "23 17 *" `shouldBe` "391"
