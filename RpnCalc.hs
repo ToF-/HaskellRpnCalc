@@ -18,14 +18,8 @@ calc = result . foldl eval initial . words
     eval x s = (unary s) x
 
     unary :: String -> (Calc -> Calc)
-    unary "neg" = \c -> case c of
-        (Right [n]) -> Right [negate n]
-        (Right [] ) -> Left "missing parameter"
-        Left m      -> Left m
-    unary "abs" = \c -> case c of
-        (Right [n]) -> Right [abs n]
-        (Right [] ) -> Left "missing parameter"
-        Left m      -> Left m
+    unary "neg" = fmap (top negate) . checkParam
+    unary "abs" = fmap (top abs) . checkParam
     unary s     = case reads s of
         [(n,_)] -> fmap (n:)
         []      -> const (Left (s ++ "?"))
@@ -33,3 +27,6 @@ calc = result . foldl eval initial . words
     checkParam :: Calc -> Calc
     checkParam (Right []) = Left "missing parameter"
     checkParam c          = c
+
+    top :: (Int -> Int) -> [Int] -> [Int]
+    top f (n:ns)= (f n:ns)
