@@ -15,19 +15,23 @@ calc =  result . foldM (flip eval) [] . words
     eval "abs" = unary abs
     eval "+"   = binary (+)
     eval "*"   = binary (*)
+    eval "-"   = binary (flip (-))
+    eval "/"   = binary (flip div)
     eval s     = parse s
 
     param :: Stack -> Calc
     param [] = Left "missing parameter"
     param st = Right st
 
-    unary :: (Int -> Int) -> Stack -> Calc
-    unary f []     = Left "missing parameter"
-    unary f (n:ns) = Right (f n:ns)
+    change :: (Int -> Int) -> Stack -> Calc
+    change f (n:ns) = Right (f n:ns)
 
+    unary :: (Int -> Int) -> Stack -> Calc
+    unary f st = param st >>= change f
+    
     binary :: (Int -> Int -> Int) -> Stack -> Calc
-    binary f (n:ns)   = unary id ns >>= unary (f n)
-    binary f _        = Left "missing parameter"
+    binary f (n:ns)   = param ns  >>= change (f n)
+    binary f st       = param st
      
     parse :: String -> Stack -> Calc
     parse s ns = case reads s of

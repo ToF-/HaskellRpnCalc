@@ -21,4 +21,6 @@ main = hspec $ do
         it "should allow for binary operation" $ do
             calc "23 17 +" `shouldBe` "40"
             calc "23 17 *" `shouldBe` "391"
+            calc "42 5 -" `shouldBe` "37"
+            calc "42 5 /" `shouldBe` "8"
         
