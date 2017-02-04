@@ -29,3 +29,7 @@ calc = result . foldl eval initial . words
     unary s     = case reads s of
         [(n,_)] -> fmap (n:)
         []      -> const (Left (s ++ "?"))
+
+    checkParam :: Calc -> Calc
+    checkParam (Right []) = Left "missing parameter"
+    checkParam c          = c
