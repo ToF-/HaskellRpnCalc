@@ -17,16 +17,19 @@ calc = result . foldl eval initial . words
     eval :: Calc -> String -> Calc
     eval x s = (unary s) x
 
-    unary :: String -> (Calc -> Calc)
-    unary "neg" = fmap (top negate) . checkParam
-    unary "abs" = fmap (top abs) . checkParam
-    unary s     = case reads s of
-        [(n,_)] -> fmap (n:)
-        []      -> const (Left (s ++ "?"))
+    unary :: String -> Calc -> Calc
+    unary "neg" c = c >>= pop >>= top negate
+    unary "abs" c = c >>= pop >>= top abs
+    unary s     c = c >>= parse s
 
-    checkParam :: Calc -> Calc
-    checkParam (Right []) = Left "missing parameter"
-    checkParam c          = c
+    parse :: String -> [Int] -> Calc
+    parse s ns = case reads s of
+        [(n,_)] -> Right (n:ns)
+        []      -> Left (s ++ "?")
 
-    top :: (Int -> Int) -> [Int] -> [Int]
-    top f (n:ns)= (f n:ns)
+    top :: (Int -> Int) -> (Int,[Int]) -> Calc
+    top f (n,ns) = Right (f n:ns)
+
+    pop :: [Int] -> Either Message (Int,[Int])
+    pop (n:ns) = Right (n,ns)
+    pop []     = Left "missing parameter"
