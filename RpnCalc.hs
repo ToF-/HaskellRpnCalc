@@ -17,6 +17,10 @@ calc =  result . foldM (flip eval) [] . words
     eval "*"   = binary (*)
     eval s     = parse s
 
+    param :: Stack -> Calc
+    param [] = Left "missing parameter"
+    param st = Right st
+
     unary :: (Int -> Int) -> Stack -> Calc
     unary f []     = Left "missing parameter"
     unary f (n:ns) = Right (f n:ns)
