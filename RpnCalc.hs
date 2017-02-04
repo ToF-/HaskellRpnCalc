@@ -22,7 +22,7 @@ calc =  result . foldM (flip eval) [] . words
     unary f (n:ns) = Right (f n:ns)
 
     binary :: (Int -> Int -> Int) -> Stack -> Calc
-    binary f (n:m:ns) = Right (f n m:ns)
+    binary f (n:ns)   = unary id ns >>= unary (f n)
     binary f _        = Left "missing parameter"
      
     parse :: String -> Stack -> Calc
