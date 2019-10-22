@@ -5,8 +5,8 @@ main = hspec $ do
     describe "eval" $ do
         describe "can evaluate tokens using a stack:" $ do
             it "const pushes a constant on the stack" $ do
-                [] `eval` (Const 42) `shouldBe` [42]
-                [] `eval` (Const 17) `shouldBe` [17]
+                []   `eval` (Const 42) `shouldBe` [42]
+                []   `eval` (Const 17) `shouldBe` [17]
                 [42] `eval` (Const 17) `shouldBe` [17,42]
 
             it "unary applies a unary operation on the top of the stack" $ do 
@@ -15,8 +15,3 @@ main = hspec $ do
             it "binary applies a binary operation on the top and second to top of the stack" $ do 
                 [17,42] `eval` (Binary (+)) `shouldBe` [59]
 
-    describe "parse" $ do
-        describe "can parse a string into tokens" $ do
-            it "interprets a number" $ do
-                let res = flip eval . head . fst . parse
-                res "42" [] `shouldBe` [42]
