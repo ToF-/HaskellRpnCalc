@@ -13,3 +13,6 @@ eval (n:m:ns) (Binary f) = f n m : ns
 
 parse s    = case reads s :: [(Integer,String)] of
     [(n,r)] -> [(Const n,r)]
+    []      -> parseFunction s
+    where
+    parseFunction "!" = [(Unary (\n -> product [1..n]),"")]

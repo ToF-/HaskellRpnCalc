@@ -23,3 +23,7 @@ main = hspec $ do
                 let [(Const n,_)] = parse "17"
                 n  `shouldBe` 17
 
+            it "parses a string into an unary operator" $ do
+                let [(Unary f,_)] = parse "!"
+                f 4 `shouldBe` 24
+
