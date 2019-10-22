@@ -31,3 +31,11 @@ main = hspec $ do
                 let [(Binary f,_)] = parse "+"
                 f 42 17 `shouldBe` 59
 
+            it "yields the rest to parse as well as the token" $ do
+                let [(Const n,s)] = parse "42!17+"
+                s `shouldBe` "!17+"
+                let [(Unary _,s)] = parse "!17+"
+                s `shouldBe` "17+"
+                let [(Binary _,s)] = parse "+2-"
+                s `shouldBe` "2-"
+

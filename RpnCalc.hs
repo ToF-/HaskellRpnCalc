@@ -15,5 +15,5 @@ parse s    = case reads s :: [(Integer,String)] of
     [(n,r)] -> [(Const n,r)]
     []      -> parseFunction s
     where
-    parseFunction "!" = [(Unary (\n -> product [1..n]),"")]
-    parseFunction "+" = [(Binary (+),"")]
+    parseFunction ('!':s) = [(Unary (\n -> product [1..n]),s)]
+    parseFunction ('+':s) = [(Binary (+),s)]
