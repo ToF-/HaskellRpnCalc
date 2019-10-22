@@ -20,4 +20,6 @@ main = hspec $ do
             it "parses a string into a constant number" $ do
                 let [(Const n,_)] = parse "42"
                 n  `shouldBe` 42
+                let [(Const n,_)] = parse "17"
+                n i `shouldBe` 17
 
