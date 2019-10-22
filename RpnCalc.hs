@@ -11,3 +11,4 @@ eval st       (Const n)  = n     : st
 eval (n:ns)   (Unary f)  = f n   : ns
 eval (n:m:ns) (Binary f) = f n m : ns
 
+parse _ = [(Const 42,"")]
