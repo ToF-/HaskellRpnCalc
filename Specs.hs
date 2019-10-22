@@ -27,3 +27,7 @@ main = hspec $ do
                 let [(Unary f,_)] = parse "!"
                 f 4 `shouldBe` 24
 
+            it "parses a string into a binary operator" $ do
+                let [(Binary f,_)] = parse "+"
+                f 42 17 `shouldBe` 59
+
