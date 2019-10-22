@@ -11,3 +11,6 @@ main = hspec $ do
 
             it "unary applies a unary operation on the top of the stack" $ do 
                 [42] `eval` (Unary negate) `shouldBe` [-42]
+
+            it "binary applies a binary operation on the top and second to top of the stack" $ do 
+                [17,42] `eval` (Binary (+)) `shouldBe` [59]
