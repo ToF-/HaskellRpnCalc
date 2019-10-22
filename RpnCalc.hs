@@ -5,4 +5,4 @@ type Stack = [Integer]
 data Token = Const Integer
 
 eval :: Stack -> Token -> Stack
-eval _ (Const 42) = [42]
+eval st (Const n) = n : st
