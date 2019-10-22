@@ -14,3 +14,9 @@ main = hspec $ do
 
             it "binary applies a binary operation on the top and second to top of the stack" $ do 
                 [17,42] `eval` (Binary (+)) `shouldBe` [59]
+
+    describe "parse" $ do
+        describe "can parse a string into tokens" $ do
+            it "interprets a number" $ do
+                let res = flip eval . head . fst . parse
+                res "42" [] `shouldBe` [42]
