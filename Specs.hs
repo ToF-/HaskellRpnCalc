@@ -21,5 +21,5 @@ main = hspec $ do
                 let [(Const n,_)] = parse "42"
                 n  `shouldBe` 42
                 let [(Const n,_)] = parse "17"
-                n i `shouldBe` 17
+                n  `shouldBe` 17
 
