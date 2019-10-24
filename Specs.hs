@@ -39,3 +39,10 @@ main = hspec $ do
                 let [(Binary _,s)] = parse "+2-"
                 s `shouldBe` "2-"
 
+        describe "parseRpn" $ do
+            it "should parse a whole RPN expression" $ do
+                let [Const n ,Unary f ,Const m ,Binary p] = parseRPN "4!17+" 
+                p (f n) m `shouldBe` (4*3*2)+17
+
+        
+

@@ -17,3 +17,12 @@ parse s    = case reads s :: [(Integer,String)] of
     where
     parseFunction ('!':s) = [(Unary (\n -> product [1..n]),s)]
     parseFunction ('+':s) = [(Binary (+),s)]
+
+parseRPN :: String -> [Token]
+parseRPN = parseIt []
+    where
+    parseIt :: [Token] -> String -> [Token]
+    parseIt ts "" = ts
+    parseIt ts s = let
+        [(t,s')] = parse s
+        in parseIt (ts ++ [t]) s'
