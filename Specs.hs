@@ -39,10 +39,6 @@ main = hspec $ do
                 let [(Binary _,s)] = parse "+2-"
                 s `shouldBe` "2-"
 
-            it "doesn't parse a minus prefix to a number" $ do
-                let ts = parse "-5" 
-                null ts  `shouldBe` True
-
         describe "parseRpn" $ do
             it "should parse a whole RPN expression" $ do
                 let [Const n ,Unary f ,Const m ,Binary p] = parseRPN "4!17+" 
@@ -64,7 +60,7 @@ main = hspec $ do
                 e "5 7-3*" `shouldBe` (-6)
                 let ts = parseRPN "4~3*5/4^7%"
                 evalRPN ts `shouldBe` (((((-4)*3)`div`5)^4)`mod`7)
-                let ts = parseRPN "4~3*5/4^7%2+5 7-2*+"
+                let ts = parseRPN "4~3*5/4^7%  5 7-2*+"
                 evalRPN ts `shouldBe` (((((-4)*3)`div`5)^4)`mod`7)+((5-7)*2)
                 
 

@@ -1,5 +1,6 @@
 module RpnCalc
 where
+import Data.Char
 
 type Stack = [Integer]
 data Token = Const Integer
@@ -14,11 +15,11 @@ eval (n:m:ns) (Binary f) = f n m : ns
 evalRPN :: [Token] -> Integer
 evalRPN = head . foldl eval []
 
-parse s    = case reads s :: [(Integer,String)] of
-    [(n,r)] | n >= 0 -> [(Const n,r)]
-            | otherwise -> [] 
-    []      -> parseFunction s
+parse s    = case digits of
+    [] -> parseFunction s
+    _  -> [(Const (read digits),drop (length digits) s)]
     where
+    digits = takeWhile isDigit s
     parseFunction (' ':s) = [(Unary id,s)]
     parseFunction ('!':s) = [(Unary (\n -> product [1..n]),s)]
     parseFunction ('~':s) = [(Unary negate,s)]
