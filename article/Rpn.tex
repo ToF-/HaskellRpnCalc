@@ -97,8 +97,7 @@
 
 \begin{document}
 \setlength{\parindent}{0em}
-The module for the reverse polish notation.\\
-
+This is the module for the reverse polish notation calculator. 
 \begingroup\par\noindent\advance\leftskip\mathindent\(
 \begin{pboxed}\SaveRestoreHook
 \column{B}{@{}>{\hspre}l<{\hspost}@{}}%
@@ -109,4 +108,162 @@ The module for the reverse polish notation.\\
 \ColumnHook
 \end{pboxed}
 \)\par\noindent\endgroup\resethooks
+The calculator is given a \text{\ttfamily String} containing an RPN expression, and yields the value of this expression, a \text{\ttfamily Number}. Here we choose \text{\ttfamily Number} to be equivalent to \text{\ttfamily Integer}, but another numeric type would also work.
+\begingroup\par\noindent\advance\leftskip\mathindent\(
+\begin{pboxed}\SaveRestoreHook
+\column{B}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{E}{@{}>{\hspre}l<{\hspost}@{}}%
+\>[B]{}\mathbf{type}\;\Conid{Number}\mathrel{=}\Conid{Integer}{}\<[E]%
+\\
+\>[B]{}\Varid{rpn}\mathbin{::}\Conid{String}\to \Conid{Number}{}\<[E]%
+\\
+\>[B]{}\Varid{rpn}\mathrel{=}\bot {}\<[E]%
+\ColumnHook
+\end{pboxed}
+\)\par\noindent\endgroup\resethooks
+The meaning of an RPN expression can be expressed as a list of \emph{tokens}. A token is either a value or an operator. Most operators operate on two numbers like \text{\ttfamily \char43{}} or \text{\ttfamily \char42{}}:they are called \emph{binary} operators, and some of them are \emph{unary} operators, like \text{\ttfamily \char33{}}. Let's describe this in Haskell:
+\begingroup\par\noindent\advance\leftskip\mathindent\(
+\begin{pboxed}\SaveRestoreHook
+\column{B}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{12}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{21}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{E}{@{}>{\hspre}l<{\hspost}@{}}%
+\>[B]{}\mathbf{data}\;\Conid{Token}\mathrel{=}\Conid{Value}\;\Conid{Number}{}\<[E]%
+\\
+\>[B]{}\hsindent{12}{}\<[12]%
+\>[12]{}\mid \Conid{Unary}\;{}\<[21]%
+\>[21]{}(\Conid{Number}\to \Conid{Number}){}\<[E]%
+\\
+\>[B]{}\hsindent{12}{}\<[12]%
+\>[12]{}\mid \Conid{Binary}\;(\Conid{Number}\to \Conid{Number}\to \Conid{Number}){}\<[E]%
+\ColumnHook
+\end{pboxed}
+\)\par\noindent\endgroup\resethooks
+To evaluate the expression, we execute each token on a \emph{stack}, a structure that allows for inserting and removing numbers in a \emph{last in, first out} fashion. A stack can either be empty (in which case applying an operator should result in a program error) or have an item followed by a possibly empty sequence of item previously entered on the stack.
+\begingroup\par\noindent\advance\leftskip\mathindent\(
+\begin{pboxed}\SaveRestoreHook
+\column{B}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{5}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{12}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{E}{@{}>{\hspre}l<{\hspost}@{}}%
+\>[B]{}\mathbf{data}\;\Conid{Stack}\mathrel{=}\Conid{Empty}{}\<[E]%
+\\
+\>[B]{}\hsindent{12}{}\<[12]%
+\>[12]{}\mid \Conid{Item}\;\Conid{Number}\;\Conid{Stack}{}\<[E]%
+\\
+\>[B]{}\hsindent{5}{}\<[5]%
+\>[5]{}\mathbf{deriving}\;(\Conid{Show}){}\<[E]%
+\ColumnHook
+\end{pboxed}
+\)\par\noindent\endgroup\resethooks
+Two functions are defined that use a \text{\ttfamily Stack}. The first one, \text{\ttfamily push}, takes an existing stack, a number, and puts that number on top of the existing stack, thus yielding a new stack.
+\begingroup\par\noindent\advance\leftskip\mathindent\(
+\begin{pboxed}\SaveRestoreHook
+\column{B}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{E}{@{}>{\hspre}l<{\hspost}@{}}%
+\>[B]{}\Varid{push}\mathbin{::}\Conid{Stack}\to \Conid{Number}\to \Conid{Stack}{}\<[E]%
+\\
+\>[B]{}\Varid{push}\;\Varid{st}\;\Varid{n}\mathrel{=}\Conid{Item}\;\Varid{n}\;\Varid{st}{}\<[E]%
+\ColumnHook
+\end{pboxed}
+\)\par\noindent\endgroup\resethooks
+The second one, \text{\ttfamily pop}, extracts the number at the top and returns this number and the stack without this number. Popping a number from the empty stack results in a progam error. 
+\begingroup\par\noindent\advance\leftskip\mathindent\(
+\begin{pboxed}\SaveRestoreHook
+\column{B}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{E}{@{}>{\hspre}l<{\hspost}@{}}%
+\>[B]{}\Varid{pop}\mathbin{::}\Conid{Stack}\to (\Conid{Number},\Conid{Stack}){}\<[E]%
+\\
+\>[B]{}\Varid{pop}\;(\Conid{Item}\;\Varid{n}\;\Varid{st})\mathrel{=}(\Varid{n},\Varid{st}){}\<[E]%
+\\
+\>[B]{}\Varid{pop}\;\Conid{Empty}\mathrel{=}\Varid{error}\;\text{\ttfamily \char34 empty~stack\char34}{}\<[E]%
+\ColumnHook
+\end{pboxed}
+\)\par\noindent\endgroup\resethooks
+(Here's some function to present the content of a stack as a list of numbers and vice versa)
+\begingroup\par\noindent\advance\leftskip\mathindent\(
+\begin{pboxed}\SaveRestoreHook
+\column{B}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{5}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{11}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{E}{@{}>{\hspre}l<{\hspost}@{}}%
+\>[B]{}\Varid{toList}\mathbin{::}\Conid{Stack}\to [\mskip1.5mu \Conid{Number}\mskip1.5mu]{}\<[E]%
+\\
+\>[B]{}\Varid{toList}\mathrel{=}\Varid{reverse}\mathbin{\circ}\Varid{toList'}{}\<[E]%
+\\
+\>[B]{}\hsindent{5}{}\<[5]%
+\>[5]{}\mathbf{where}{}\<[E]%
+\\
+\>[B]{}\hsindent{5}{}\<[5]%
+\>[5]{}\Varid{toList'}\;\Conid{Empty}\mathrel{=}[\mskip1.5mu \mskip1.5mu]{}\<[E]%
+\\
+\>[B]{}\hsindent{5}{}\<[5]%
+\>[5]{}\Varid{toList'}\;\Varid{st}\mathrel{=}\Varid{n}\mathbin{:}\Varid{toList'}\;\Varid{st'}\;\mathbf{where}\;(\Varid{n},\Varid{st'})\mathrel{=}\Varid{pop}\;\Varid{st}{}\<[E]%
+\\[\blanklineskip]%
+\>[B]{}\Varid{fromList}\mathbin{::}[\mskip1.5mu \Conid{Number}\mskip1.5mu]\to \Conid{Stack}{}\<[E]%
+\\
+\>[B]{}\Varid{fromList}{}\<[11]%
+\>[11]{}\mathrel{=}\Varid{foldl}\;\Varid{push}\;\Conid{Empty}{}\<[E]%
+\ColumnHook
+\end{pboxed}
+\)\par\noindent\endgroup\resethooks
+Applying the token \text{\ttfamily Number~} $n$ on the stack results in pushing the integer $n$ on the top op the stack. Applying an unary operator consists in applying the operator on the top of the stack, while applying a binary operator is done by pulling two values from the stack, then pushing the result of the operation. 
+\begingroup\par\noindent\advance\leftskip\mathindent\(
+\begin{pboxed}\SaveRestoreHook
+\column{B}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{5}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{9}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{39}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{E}{@{}>{\hspre}l<{\hspost}@{}}%
+\>[B]{}\Varid{apply}\mathbin{::}\Conid{Stack}\to \Conid{Token}\to \Conid{Stack}{}\<[E]%
+\\
+\>[B]{}\Varid{apply}\;\Varid{st}\;(\Conid{Value}\;\Varid{n})\mathrel{=}\Conid{Item}\;\Varid{n}\;\Varid{st}{}\<[E]%
+\\
+\>[B]{}\Varid{apply}\;\Varid{st}\;(\Conid{Unary}\;\Varid{op})\mathrel{=}\mathbf{let}\;(\Varid{n},\Varid{st'}){}\<[39]%
+\>[39]{}\mathrel{=}\Varid{pop}\;\Varid{st}\;\mathbf{in}\;\Conid{Item}\;(\Varid{op}\;\Varid{n})\;\Varid{st'}{}\<[E]%
+\\
+\>[B]{}\Varid{apply}\;\Varid{st}\;(\Conid{Binary}\;\Varid{op})\mathrel{=}{}\<[E]%
+\\
+\>[B]{}\hsindent{5}{}\<[5]%
+\>[5]{}\mathbf{let}\;(\Varid{n},\Varid{st'})\mathrel{=}\Varid{pop}\;\Varid{st}{}\<[E]%
+\\
+\>[5]{}\hsindent{4}{}\<[9]%
+\>[9]{}(\Varid{n'},\Varid{st''})\mathrel{=}\Varid{pop}\;\Varid{st'}{}\<[E]%
+\\
+\>[B]{}\hsindent{5}{}\<[5]%
+\>[5]{}\mathbf{in}\;\Conid{Item}\;(\Varid{n'}\mathbin{`\Varid{op}`}\Varid{n})\;\Varid{st''}{}\<[E]%
+\ColumnHook
+\end{pboxed}
+\)\par\noindent\endgroup\resethooks
+We can now calculte values expressed as a list of RPN tokens: for example the following list will convert a temperature from Celsius to Fahreinheit:
+\begingroup\par\noindent\advance\leftskip\mathindent\(
+\begin{pboxed}\SaveRestoreHook
+\column{B}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{5}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{E}{@{}>{\hspre}l<{\hspost}@{}}%
+\>[B]{}\Varid{cToF}\mathbin{::}\Conid{Number}\to \Conid{Number}{}\<[E]%
+\\
+\>[B]{}\Varid{cToF}\;\Varid{n}\mathrel{=}\Varid{head}\mathbin{\$}\Varid{toList}\mathbin{\$}\Varid{foldl}\;\Varid{apply}\;(\Varid{fromList}\;[\mskip1.5mu \Varid{n}\mskip1.5mu]){}\<[E]%
+\\
+\>[B]{}\hsindent{5}{}\<[5]%
+\>[5]{}[\mskip1.5mu \Conid{Value}\;\mathrm{9}{}\<[E]%
+\\
+\>[B]{}\hsindent{5}{}\<[5]%
+\>[5]{},\Conid{Binary}\;(\mathbin{*}){}\<[E]%
+\\
+\>[B]{}\hsindent{5}{}\<[5]%
+\>[5]{},\Conid{Value}\;\mathrm{5}{}\<[E]%
+\\
+\>[B]{}\hsindent{5}{}\<[5]%
+\>[5]{},\Conid{Binary}\;\Varid{div}{}\<[E]%
+\\
+\>[B]{}\hsindent{5}{}\<[5]%
+\>[5]{},\Conid{Value}\;\mathrm{32}{}\<[E]%
+\\
+\>[B]{}\hsindent{5}{}\<[5]%
+\>[5]{},\Conid{Binary}\;(\mathbin{+})\mskip1.5mu]{}\<[E]%
+\ColumnHook
+\end{pboxed}
+\)\par\noindent\endgroup\resethooks
+THe remaining problem is to parse a string into a list of tokens.
 \end{document}
