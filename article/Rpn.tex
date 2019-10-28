@@ -105,6 +105,10 @@ This is the module for the reverse polish notation calculator.
 \>[B]{}\mathbf{module}\;\Conid{Rpn}{}\<[E]%
 \\
 \>[B]{}\mathbf{where}{}\<[E]%
+\\
+\>[B]{}\mathbf{import}\;\Conid{\Conid{Data}.List}\;(\Varid{break}){}\<[E]%
+\\
+\>[B]{}\mathbf{import}\;\Conid{\Conid{Data}.Char}\;(\Varid{isDigit},\Varid{isSpace}){}\<[E]%
 \ColumnHook
 \end{pboxed}
 \)\par\noindent\endgroup\resethooks
@@ -121,24 +125,45 @@ The calculator is given a \text{\ttfamily String} containing an RPN expression, 
 \ColumnHook
 \end{pboxed}
 \)\par\noindent\endgroup\resethooks
-The meaning of an RPN expression can be expressed as a list of \emph{tokens}. A token is either a value or an operator. Most operators operate on two numbers like \text{\ttfamily \char43{}} or \text{\ttfamily \char42{}}:they are called \emph{binary} operators, and some of them are \emph{unary} operators, like \text{\ttfamily \char33{}}. Let's describe this in Haskell:
+The meaning of an RPN expression can be expressed as a list of \emph{tokens}. A token is either a value or an operator. Most operators operate on two numbers like \text{\ttfamily \char43{}} or \text{\ttfamily \char42{}}. Some of the operators are \emph{unary} operators, like \text{\ttfamily \char33{}}. Let's describe this in Haskell:
 \begingroup\par\noindent\advance\leftskip\mathindent\(
 \begin{pboxed}\SaveRestoreHook
 \column{B}{@{}>{\hspre}l<{\hspost}@{}}%
 \column{12}{@{}>{\hspre}l<{\hspost}@{}}%
-\column{21}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{19}{@{}>{\hspre}l<{\hspost}@{}}%
 \column{E}{@{}>{\hspre}l<{\hspost}@{}}%
-\>[B]{}\mathbf{data}\;\Conid{Token}\mathrel{=}\Conid{Value}\;\Conid{Number}{}\<[E]%
+\>[B]{}\mathbf{data}\;\Conid{Token}\mathrel{=}\Conid{Val}\;\Conid{Number}{}\<[E]%
 \\
 \>[B]{}\hsindent{12}{}\<[12]%
-\>[12]{}\mid \Conid{Unary}\;{}\<[21]%
-\>[21]{}(\Conid{Number}\to \Conid{Number}){}\<[E]%
+\>[12]{}\mid \Conid{Op1}\;{}\<[19]%
+\>[19]{}(\Conid{Number}\to \Conid{Number}){}\<[E]%
 \\
 \>[B]{}\hsindent{12}{}\<[12]%
-\>[12]{}\mid \Conid{Binary}\;(\Conid{Number}\to \Conid{Number}\to \Conid{Number}){}\<[E]%
+\>[12]{}\mid \Conid{Op2}\;(\Conid{Number}\to \Conid{Number}\to \Conid{Number}){}\<[E]%
 \ColumnHook
 \end{pboxed}
 \)\par\noindent\endgroup\resethooks
+Since we cannot really \text{\ttfamily show} a value of type \text{\ttfamily Number~\char45{}\char62{}~Number}, let's define specific "evasive" way of showing a token:
+
+\begingroup\par\noindent\advance\leftskip\mathindent\(
+\begin{pboxed}\SaveRestoreHook
+\column{B}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{5}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{E}{@{}>{\hspre}l<{\hspost}@{}}%
+\>[B]{}\mathbf{instance}\;\Conid{Show}\;\Conid{Token}\;\mathbf{where}{}\<[E]%
+\\
+\>[B]{}\hsindent{5}{}\<[5]%
+\>[5]{}\Varid{show}\;(\Conid{Val}\;\Varid{n})\mathrel{=}\Varid{show}\;\Varid{n}{}\<[E]%
+\\
+\>[B]{}\hsindent{5}{}\<[5]%
+\>[5]{}\Varid{show}\;(\Conid{Op1}\;\anonymous )\mathrel{=}\text{\ttfamily \char34 <op1>\char34}{}\<[E]%
+\\
+\>[B]{}\hsindent{5}{}\<[5]%
+\>[5]{}\Varid{show}\;(\Conid{Op2}\;\anonymous )\mathrel{=}\text{\ttfamily \char34 <op2>\char34}{}\<[E]%
+\ColumnHook
+\end{pboxed}
+\)\par\noindent\endgroup\resethooks
+
 To evaluate the expression, we execute each token on a \emph{stack}, a structure that allows for inserting and removing numbers in a \emph{last in, first out} fashion. A stack can either be empty (in which case applying an operator should result in a program error) or have an item followed by a possibly empty sequence of item previously entered on the stack.
 \begingroup\par\noindent\advance\leftskip\mathindent\(
 \begin{pboxed}\SaveRestoreHook
@@ -156,18 +181,37 @@ To evaluate the expression, we execute each token on a \emph{stack}, a structure
 \ColumnHook
 \end{pboxed}
 \)\par\noindent\endgroup\resethooks
-Two functions are defined that use a \text{\ttfamily Stack}. The first one, \text{\ttfamily push}, takes an existing stack, a number, and puts that number on top of the existing stack, thus yielding a new stack.
+We can create an empty stack, and also tell if a stack is empty.
+\begingroup\par\noindent\advance\leftskip\mathindent\(
+\begin{pboxed}\SaveRestoreHook
+\column{B}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{15}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{E}{@{}>{\hspre}l<{\hspost}@{}}%
+\>[B]{}\Varid{empty}\mathbin{::}\Conid{Stack}{}\<[E]%
+\\
+\>[B]{}\Varid{empty}\mathrel{=}\Conid{Empty}{}\<[E]%
+\\[\blanklineskip]%
+\>[B]{}\Varid{isEmpty}\mathbin{::}\Conid{Stack}\to \Conid{Bool}{}\<[E]%
+\\
+\>[B]{}\Varid{isEmpty}\;\Conid{Empty}\mathrel{=}\Conid{True}{}\<[E]%
+\\
+\>[B]{}\Varid{isEmprt}\;\anonymous {}\<[15]%
+\>[15]{}\mathrel{=}\Conid{False}{}\<[E]%
+\ColumnHook
+\end{pboxed}
+\)\par\noindent\endgroup\resethooks
+\text{\ttfamily push}, takes a number, an existing stack, and puts that number on top of the existing stack, thus yielding a new stack.
 \begingroup\par\noindent\advance\leftskip\mathindent\(
 \begin{pboxed}\SaveRestoreHook
 \column{B}{@{}>{\hspre}l<{\hspost}@{}}%
 \column{E}{@{}>{\hspre}l<{\hspost}@{}}%
-\>[B]{}\Varid{push}\mathbin{::}\Conid{Stack}\to \Conid{Number}\to \Conid{Stack}{}\<[E]%
+\>[B]{}\Varid{push}\mathbin{::}\Conid{Number}\to \Conid{Stack}\to \Conid{Stack}{}\<[E]%
 \\
-\>[B]{}\Varid{push}\;\Varid{st}\;\Varid{n}\mathrel{=}\Conid{Item}\;\Varid{n}\;\Varid{st}{}\<[E]%
+\>[B]{}\Varid{push}\mathrel{=}\Conid{Item}{}\<[E]%
 \ColumnHook
 \end{pboxed}
 \)\par\noindent\endgroup\resethooks
-The second one, \text{\ttfamily pop}, extracts the number at the top and returns this number and the stack without this number. Popping a number from the empty stack results in a progam error. 
+\text{\ttfamily pop}, extracts the number at the top and returns this number and the stack without this number. Popping a number from the empty stack results in a progam error. 
 \begingroup\par\noindent\advance\leftskip\mathindent\(
 \begin{pboxed}\SaveRestoreHook
 \column{B}{@{}>{\hspre}l<{\hspost}@{}}%
@@ -180,11 +224,12 @@ The second one, \text{\ttfamily pop}, extracts the number at the top and returns
 \ColumnHook
 \end{pboxed}
 \)\par\noindent\endgroup\resethooks
-(Here's some function to present the content of a stack as a list of numbers and vice versa)
+Here are two functions to convert the content of a stack into a list of numbers and vice versa.
 \begingroup\par\noindent\advance\leftskip\mathindent\(
 \begin{pboxed}\SaveRestoreHook
 \column{B}{@{}>{\hspre}l<{\hspost}@{}}%
 \column{5}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{9}{@{}>{\hspre}l<{\hspost}@{}}%
 \column{11}{@{}>{\hspre}l<{\hspost}@{}}%
 \column{E}{@{}>{\hspre}l<{\hspost}@{}}%
 \>[B]{}\Varid{toList}\mathbin{::}\Conid{Stack}\to [\mskip1.5mu \Conid{Number}\mskip1.5mu]{}\<[E]%
@@ -198,12 +243,15 @@ The second one, \text{\ttfamily pop}, extracts the number at the top and returns
 \>[5]{}\Varid{toList'}\;\Conid{Empty}\mathrel{=}[\mskip1.5mu \mskip1.5mu]{}\<[E]%
 \\
 \>[B]{}\hsindent{5}{}\<[5]%
-\>[5]{}\Varid{toList'}\;\Varid{st}\mathrel{=}\Varid{n}\mathbin{:}\Varid{toList'}\;\Varid{st'}\;\mathbf{where}\;(\Varid{n},\Varid{st'})\mathrel{=}\Varid{pop}\;\Varid{st}{}\<[E]%
+\>[5]{}\Varid{toList'}\;\Varid{st}\mathrel{=}\Varid{n}\mathbin{:}\Varid{toList'}\;\Varid{st'}{}\<[E]%
+\\
+\>[5]{}\hsindent{4}{}\<[9]%
+\>[9]{}\mathbf{where}\;(\Varid{n},\Varid{st'})\mathrel{=}\Varid{pop}\;\Varid{st}{}\<[E]%
 \\[\blanklineskip]%
 \>[B]{}\Varid{fromList}\mathbin{::}[\mskip1.5mu \Conid{Number}\mskip1.5mu]\to \Conid{Stack}{}\<[E]%
 \\
 \>[B]{}\Varid{fromList}{}\<[11]%
-\>[11]{}\mathrel{=}\Varid{foldl}\;\Varid{push}\;\Conid{Empty}{}\<[E]%
+\>[11]{}\mathrel{=}\Varid{foldl}\;(\Varid{flip}\;\Varid{push})\;\Conid{Empty}{}\<[E]%
 \ColumnHook
 \end{pboxed}
 \)\par\noindent\endgroup\resethooks
@@ -213,57 +261,181 @@ Applying the token \text{\ttfamily Number~} $n$ on the stack results in pushing 
 \column{B}{@{}>{\hspre}l<{\hspost}@{}}%
 \column{5}{@{}>{\hspre}l<{\hspost}@{}}%
 \column{9}{@{}>{\hspre}l<{\hspost}@{}}%
-\column{39}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{18}{@{}>{\hspre}l<{\hspost}@{}}%
 \column{E}{@{}>{\hspre}l<{\hspost}@{}}%
 \>[B]{}\Varid{apply}\mathbin{::}\Conid{Stack}\to \Conid{Token}\to \Conid{Stack}{}\<[E]%
 \\
-\>[B]{}\Varid{apply}\;\Varid{st}\;(\Conid{Value}\;\Varid{n})\mathrel{=}\Conid{Item}\;\Varid{n}\;\Varid{st}{}\<[E]%
+\>[B]{}\Varid{apply}\;\Varid{st}\;(\Conid{Val}\;\Varid{n})\mathrel{=}\Conid{Item}\;\Varid{n}\;\Varid{st}{}\<[E]%
 \\
-\>[B]{}\Varid{apply}\;\Varid{st}\;(\Conid{Unary}\;\Varid{op})\mathrel{=}\mathbf{let}\;(\Varid{n},\Varid{st'}){}\<[39]%
-\>[39]{}\mathrel{=}\Varid{pop}\;\Varid{st}\;\mathbf{in}\;\Conid{Item}\;(\Varid{op}\;\Varid{n})\;\Varid{st'}{}\<[E]%
-\\
-\>[B]{}\Varid{apply}\;\Varid{st}\;(\Conid{Binary}\;\Varid{op})\mathrel{=}{}\<[E]%
+\>[B]{}\Varid{apply}\;\Varid{st}\;(\Conid{Op1}\;\Varid{op})\mathrel{=}\Conid{Item}\;(\Varid{op}\;\Varid{n})\;\Varid{st'}{}\<[E]%
 \\
 \>[B]{}\hsindent{5}{}\<[5]%
-\>[5]{}\mathbf{let}\;(\Varid{n},\Varid{st'})\mathrel{=}\Varid{pop}\;\Varid{st}{}\<[E]%
+\>[5]{}\mathbf{where}\;(\Varid{n},\Varid{st'})\mathrel{=}\Varid{pop}\;\Varid{st}{}\<[E]%
+\\
+\>[B]{}\Varid{apply}\;\Varid{st}\;(\Conid{Op2}\;\Varid{op})\mathrel{=}\Conid{Item}\;(\Varid{m}\mathbin{`\Varid{op}`}\Varid{n})\;\Varid{st''}{}\<[E]%
+\\
+\>[B]{}\hsindent{5}{}\<[5]%
+\>[5]{}\mathbf{where}{}\<[E]%
 \\
 \>[5]{}\hsindent{4}{}\<[9]%
-\>[9]{}(\Varid{n'},\Varid{st''})\mathrel{=}\Varid{pop}\;\Varid{st'}{}\<[E]%
+\>[9]{}(\Varid{n},\Varid{st'}){}\<[18]%
+\>[18]{}\mathrel{=}\Varid{pop}\;\Varid{st}{}\<[E]%
 \\
-\>[B]{}\hsindent{5}{}\<[5]%
-\>[5]{}\mathbf{in}\;\Conid{Item}\;(\Varid{n'}\mathbin{`\Varid{op}`}\Varid{n})\;\Varid{st''}{}\<[E]%
+\>[5]{}\hsindent{4}{}\<[9]%
+\>[9]{}(\Varid{m},\Varid{st''})\mathrel{=}\Varid{pop}\;\Varid{st'}{}\<[E]%
 \ColumnHook
 \end{pboxed}
 \)\par\noindent\endgroup\resethooks
-We can now calculte values expressed as a list of RPN tokens: for example the following list will convert a temperature from Celsius to Fahreinheit:
+We can now evaluate expressions when conveyed as a list of RPN tokens. For example apply the following tokens to a stack containing a temperature value will convert this value from Celsius to Fahreinheit ($ F = \frac{9C}{5} + 32$) : \text{\ttfamily \char91{}Val~9\char44{}~Op2~\char40{}\char42{}\char41{}\char44{}~Val~5\char44{}~Op2~div\char44{}~Val~32\char44{}~Op2~\char40{}\char43{}\char41{}\char93{}}\\
+The remaining problem is to translate a string representing an RPN expression into a list of tokens. This is the work of a \text{\ttfamily rpnParser}, which itself is a combination of simpler parsers. \\
+\begingroup\par\noindent\advance\leftskip\mathindent\(
+\begin{pboxed}\SaveRestoreHook
+\column{B}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{E}{@{}>{\hspre}l<{\hspost}@{}}%
+\>[B]{}\mathbf{type}\;\Conid{Parser}\mathrel{=}\Conid{String}\to ([\mskip1.5mu \Conid{Token}\mskip1.5mu],\Conid{String}){}\<[E]%
+\ColumnHook
+\end{pboxed}
+\)\par\noindent\endgroup\resethooks
+The principle of a parser is to recognize a given pattern in a given string, and return a list of tokens and the part of the string that remains to be parsed. If the pattern is present in the input string, the list contains the tokens that were recognized, if not, the list is empty, and the remaining string is the same as the input string. 
+
+For example a parser for the operator \text{\ttfamily \char33{}} recognize only that character. Every other string value will result in a empty list of tokens.
+\begingroup\par\noindent\advance\leftskip\mathindent\(
+\begin{pboxed}\SaveRestoreHook
+\column{B}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{E}{@{}>{\hspre}l<{\hspost}@{}}%
+\>[B]{}\Varid{pFactorial}\mathbin{::}\Conid{Parser}{}\<[E]%
+\\
+\>[B]{}\Varid{pFactorial}\;(\text{\ttfamily '!'}\mathbin{:}\Varid{cs})\mathrel{=}([\mskip1.5mu \Conid{Op1}\;(\lambda \Varid{n}\to \Varid{product}\;[\mskip1.5mu \mathrm{1}\mathinner{\ldotp\ldotp}\Varid{n}\mskip1.5mu])\mskip1.5mu],\Varid{cs}){}\<[E]%
+\\
+\>[B]{}\Varid{pFactorial}\;\Varid{s}\mathrel{=}([\mskip1.5mu \mskip1.5mu],\Varid{s}){}\<[E]%
+\ColumnHook
+\end{pboxed}
+\)\par\noindent\endgroup\resethooks
+Instead of repeating this form for every operator, we can create a "factory of parser" : 
+
+\begingroup\par\noindent\advance\leftskip\mathindent\(
+\begin{pboxed}\SaveRestoreHook
+\column{B}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{5}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{20}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{E}{@{}>{\hspre}l<{\hspost}@{}}%
+\>[B]{}\Varid{pOperatorFor}\mathbin{::}\Conid{Char}\to \Conid{Token}\to \Conid{Parser}{}\<[E]%
+\\
+\>[B]{}\Varid{pOperatorFor}\;\Varid{o}\;\Varid{t}\mathrel{=}\lambda \Varid{s}\to \mathbf{case}\;\Varid{s}\;\mathbf{of}{}\<[E]%
+\\
+\>[B]{}\hsindent{5}{}\<[5]%
+\>[5]{}(\Varid{c}\mathbin{:}\Varid{cs})\mid \Varid{c}\equiv \Varid{o}\to ([\mskip1.5mu \Varid{t}\mskip1.5mu],\Varid{cs}){}\<[E]%
+\\
+\>[B]{}\hsindent{5}{}\<[5]%
+\>[5]{}\anonymous {}\<[20]%
+\>[20]{}\to ([\mskip1.5mu \mskip1.5mu],\Varid{s}){}\<[E]%
+\ColumnHook
+\end{pboxed}
+\)\par\noindent\endgroup\resethooks
+We can combine parsers in a way such that the parsed expression is recognized if contains one pattern or the other. 
+\begingroup\par\noindent\advance\leftskip\mathindent\(
+\begin{pboxed}\SaveRestoreHook
+\column{B}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{5}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{9}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{13}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{E}{@{}>{\hspre}l<{\hspost}@{}}%
+\>[B]{}\mathbf{infixl}\mathbin{<|>}{}\<[E]%
+\\
+\>[B]{}(\mathbin{<|>})\mathbin{::}\Conid{Parser}\to \Conid{Parser}\to \Conid{Parser}{}\<[E]%
+\\
+\>[B]{}\Varid{parserA}\mathbin{<|>}\Varid{parserB}\mathrel{=}\lambda \Varid{s}\to {}\<[E]%
+\\
+\>[B]{}\hsindent{5}{}\<[5]%
+\>[5]{}\mathbf{let}{}\<[E]%
+\\
+\>[5]{}\hsindent{4}{}\<[9]%
+\>[9]{}(\Varid{ta},\Varid{sA})\mathrel{=}\Varid{parserA}\;\Varid{s}{}\<[E]%
+\\
+\>[B]{}\hsindent{5}{}\<[5]%
+\>[5]{}\mathbf{in}\;\mathbf{case}\;\Varid{null}\;\Varid{ta}\;\mathbf{of}{}\<[E]%
+\\
+\>[5]{}\hsindent{8}{}\<[13]%
+\>[13]{}\Conid{False}\to (\Varid{ta},\Varid{sA}){}\<[E]%
+\\
+\>[5]{}\hsindent{8}{}\<[13]%
+\>[13]{}\Conid{True}\to \Varid{parserB}\;\Varid{sA}{}\<[E]%
+\ColumnHook
+\end{pboxed}
+\)\par\noindent\endgroup\resethooks
+
+Then a parser recognizing any of our operators can be created by folding this 'or' on a list mapping each char with its token:
+\begingroup\par\noindent\advance\leftskip\mathindent\(
+\begin{pboxed}\SaveRestoreHook
+\column{B}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{14}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{E}{@{}>{\hspre}l<{\hspost}@{}}%
+\>[B]{}\Varid{operators}\mathbin{::}[\mskip1.5mu (\Conid{Char},\Conid{Token})\mskip1.5mu]{}\<[E]%
+\\
+\>[B]{}\Varid{operators}\mathrel{=}[\mskip1.5mu (\text{\ttfamily '+'},\Conid{Op2}\;(\mathbin{+})),(\text{\ttfamily '*'},\Conid{Op2}\;(\mathbin{*})),(\text{\ttfamily '-'},\Conid{Op2}\;(\mathbin{-})),(\text{\ttfamily '/'},\Conid{Op2}\;\Varid{div}),(\text{\ttfamily '\%'},\Conid{Op2}\;\Varid{mod}){}\<[E]%
+\\
+\>[B]{}\hsindent{14}{}\<[14]%
+\>[14]{},(\text{\ttfamily '\char126 '},\Conid{Op1}\;\Varid{negate}),(\text{\ttfamily '!'},\Conid{Op1}\;(\lambda \Varid{n}\to \Varid{product}\;[\mskip1.5mu \mathrm{1}\mathinner{\ldotp\ldotp}\Varid{n}\mskip1.5mu]))\mskip1.5mu]{}\<[E]%
+\\[\blanklineskip]%
+\>[B]{}\Varid{pOperator}\mathbin{::}\Conid{Parser}{}\<[E]%
+\\
+\>[B]{}\Varid{pOperator}\mathrel{=}\Varid{foldl1}\;(\mathbin{<|>})\;(\Varid{map}\;(\Varid{uncurry}\;\Varid{pOperatorFor})\;\Varid{operators}){}\<[E]%
+\ColumnHook
+\end{pboxed}
+\)\par\noindent\endgroup\resethooks
+Parsing a number is simple: extract all characters that are digits, and produce the \text{\ttfamily Val} token, and the remaining part of the input string, or if there are no digits, return the empty list and the unchanged input string.
 \begingroup\par\noindent\advance\leftskip\mathindent\(
 \begin{pboxed}\SaveRestoreHook
 \column{B}{@{}>{\hspre}l<{\hspost}@{}}%
 \column{5}{@{}>{\hspre}l<{\hspost}@{}}%
 \column{E}{@{}>{\hspre}l<{\hspost}@{}}%
-\>[B]{}\Varid{cToF}\mathbin{::}\Conid{Number}\to \Conid{Number}{}\<[E]%
+\>[B]{}\Varid{number}\mathbin{::}\Conid{Parser}{}\<[E]%
 \\
-\>[B]{}\Varid{cToF}\;\Varid{n}\mathrel{=}\Varid{head}\mathbin{\$}\Varid{toList}\mathbin{\$}\Varid{foldl}\;\Varid{apply}\;(\Varid{fromList}\;[\mskip1.5mu \Varid{n}\mskip1.5mu]){}\<[E]%
-\\
-\>[B]{}\hsindent{5}{}\<[5]%
-\>[5]{}[\mskip1.5mu \Conid{Value}\;\mathrm{9}{}\<[E]%
+\>[B]{}\Varid{number}\;\Varid{s}\mathrel{=}\mathbf{case}\;\Varid{break}\;(\neg \mathbin{\circ}\Varid{isDigit})\;\Varid{s}\;\mathbf{of}{}\<[E]%
 \\
 \>[B]{}\hsindent{5}{}\<[5]%
-\>[5]{},\Conid{Binary}\;(\mathbin{*}){}\<[E]%
+\>[5]{}(\text{\ttfamily \char34 \char34},\anonymous )\to ([\mskip1.5mu \mskip1.5mu],\Varid{s}){}\<[E]%
 \\
 \>[B]{}\hsindent{5}{}\<[5]%
-\>[5]{},\Conid{Value}\;\mathrm{5}{}\<[E]%
-\\
-\>[B]{}\hsindent{5}{}\<[5]%
-\>[5]{},\Conid{Binary}\;\Varid{div}{}\<[E]%
-\\
-\>[B]{}\hsindent{5}{}\<[5]%
-\>[5]{},\Conid{Value}\;\mathrm{32}{}\<[E]%
-\\
-\>[B]{}\hsindent{5}{}\<[5]%
-\>[5]{},\Conid{Binary}\;(\mathbin{+})\mskip1.5mu]{}\<[E]%
+\>[5]{}(\Varid{digits},\Varid{rest})\to ([\mskip1.5mu \Conid{Val}\;(\Varid{read}\;\Varid{digits})\mskip1.5mu],\Varid{rest}){}\<[E]%
 \ColumnHook
 \end{pboxed}
 \)\par\noindent\endgroup\resethooks
-THe remaining problem is to parse a string into a list of tokens.
+Spaces in an RPN expression should be ignored. Thus the parser for space doesn't yield a specific token, it only trims the remaining string.
+
+\begingroup\par\noindent\advance\leftskip\mathindent\(
+\begin{pboxed}\SaveRestoreHook
+\column{B}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{5}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{E}{@{}>{\hspre}l<{\hspost}@{}}%
+\>[B]{}\Varid{space}\mathbin{::}\Conid{Parser}{}\<[E]%
+\\
+\>[B]{}\Varid{space}\;\Varid{s}\mathrel{=}([\mskip1.5mu \mskip1.5mu],\Varid{s'}){}\<[E]%
+\\
+\>[B]{}\hsindent{5}{}\<[5]%
+\>[5]{}\mathbf{where}\;(\anonymous ,\Varid{s'})\mathrel{=}\Varid{break}\;(\neg \mathbin{\circ}\Varid{isSpace})\;\Varid{s}{}\<[E]%
+\ColumnHook
+\end{pboxed}
+\)\par\noindent\endgroup\resethooks
+To parse an operator, take the first character of the input string and look it up in a list of all of operators, yielding the matching token.
+\begingroup\par\noindent\advance\leftskip\mathindent\(
+\begin{pboxed}\SaveRestoreHook
+\column{B}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{5}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{E}{@{}>{\hspre}l<{\hspost}@{}}%
+\>[B]{}\Varid{parseOperator}\mathbin{::}\Conid{Parser}{}\<[E]%
+\\
+\>[B]{}\Varid{parseOperator}\;\text{\ttfamily \char34 \char34}\mathrel{=}([\mskip1.5mu \mskip1.5mu],\text{\ttfamily \char34 \char34}){}\<[E]%
+\\
+\>[B]{}\Varid{parseOperator}\;\Varid{s}\mathord{@}(\Varid{c}\mathbin{:}\Varid{cs})\mathrel{=}\mathbf{case}\;\Varid{lookup}\;\Varid{c}\;\Varid{operators}\;\mathbf{of}{}\<[E]%
+\\
+\>[B]{}\hsindent{5}{}\<[5]%
+\>[5]{}\Conid{Nothing}\to ([\mskip1.5mu \mskip1.5mu],\Varid{s}){}\<[E]%
+\\
+\>[B]{}\hsindent{5}{}\<[5]%
+\>[5]{}\Conid{Just}\;\Varid{op}\to ([\mskip1.5mu \Varid{op}\mskip1.5mu],\Varid{cs}){}\<[E]%
+\ColumnHook
+\end{pboxed}
+\)\par\noindent\endgroup\resethooks
+
 \end{document}
