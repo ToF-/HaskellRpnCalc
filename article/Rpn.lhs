@@ -25,7 +25,7 @@ data Token = Val Number
            | Op1  (Number -> Number)
            | Op2 (Number -> Number -> Number)
 \end{code}
-Since we cannot really @show@ a value of type @Number -> Number@, let's define specific "evasive" way of showing a token:
+Since we cannot @show@ a value of type @Number -> Number@, let's define a specific "evasive" way of showing a token:
 
 \begin{code}
 instance Show Token where
