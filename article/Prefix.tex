@@ -1,4 +1,29 @@
-\documentclass{article}
+\documentclass[a4paper,10pt]{article}
+\usepackage{longtable,geometry}
+\usepackage[english]{babel}
+\usepackage[latin1]{inputenc}
+\usepackage[babel]{csquotes}
+\usepackage{multicol}
+\usepackage{enumitem}
+\usepackage{array}
+\usepackage{fancyhdr}
+\pagestyle{plain}
+\geometry{dvips,a4paper,margin=1.5in}
+\usepackage[usenames,dvipsnames]{xcolor}
+\usepackage{amssymb,amsmath} 
+\usepackage{afterpage}
+\usepackage{pagecolor}
+\usepackage{fancybox}
+\usepackage{listings}
+\usepackage{verbatim}
+\usepackage{fancyvrb}
+\usepackage{moreverb}
+\usepackage{txfonts}
+\usepackage{hyperref}
+\usepackage{bytefield}
+\usepackage{rotating}
+\usepackage{tikz}
+\usepackage{wallpaper}
 
 %% ODER: format ==         = "\mathrel{==}"
 %% ODER: format /=         = "\neq "
@@ -276,23 +301,81 @@ Let's write a parser for expression in prefix notation. We will need built-in fu
 \>[B]{}\mathbf{import}\;\Conid{\Conid{Data}.Char}\;(\Varid{isSpace},\Varid{isDigit}){}\<[E]%
 \ColumnHook
 \end{hscode}\resethooks
+{code}
 
 A \emph{parser} is a function that breaks a string into components called \emph{tokens}.
 \begin{hscode}\SaveRestoreHook
 \column{B}{@{}>{\hspre}l<{\hspost}@{}}%
-\column{14}{@{}>{\hspre}l<{\hspost}@{}}%
 \column{E}{@{}>{\hspre}l<{\hspost}@{}}%
 \>[B]{}\mathbf{type}\;\Conid{Parser}\mathrel{=}\Conid{String}\to [\mskip1.5mu (\Conid{Token},\Conid{String})\mskip1.5mu]{}\<[E]%
+\ColumnHook
+\end{hscode}\resethooks
+Typically, a function of type \text{\ttfamily Parser} will examine its given String argument looking for a specific token. If the token is found, it will be returned in a list, along with the part of the string that remains to be parsed. If the token is not present, an empty list is returned. 
+The token that can be parsed in a prefix expression is one of:
+\begin{itemize}
+\item A number,
+\item An operator representing an unary function, followed by its operand,
+\item A operator representing a binary function, followed by its two parameters. 
+\end{itemize}
+Each operand can be in turn, a full prefix expression. 
+For instance, the expression \text{\ttfamily \char42{}\char43{}~42~17~\char33{}5} can be parsed into the \text{\ttfamily PrefExp} value: \\
+\text{\ttfamily ~Op2~\char40{}\char42{}\char41{}}\\
+\text{\ttfamily ~~~\char40{}Op2~\char40{}\char43{}\char41{}}\\
+\text{\ttfamily ~~~~~~\char40{}Num~42\char41{}} \\
+\text{\ttfamily ~~~~~~\char40{}Num~17\char41{}\char41{}}\\
+\text{\ttfamily ~~~\char40{}Op1} (!)\\
+\text{\ttfamily ~~~~~~\char40{}Num~5\char41{}\char41{}}\\
+
+Since functions cannot be shown (try to enter \text{\ttfamily \char40{}\char43{}\char41{}} at the \emph{ghci} prompt to see why), we put additional information in the definition of \text{\ttfamily PrefExp} values so that showing them make sense.
+\begin{hscode}\SaveRestoreHook
+\column{B}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{14}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{E}{@{}>{\hspre}l<{\hspost}@{}}%
+\>[B]{}\mathbf{type}\;\Conid{Number}\mathrel{=}\Conid{Integer}{}\<[E]%
 \\
 \>[B]{}\mathbf{type}\;\Conid{Token}\mathrel{=}\Conid{PrefExp}{}\<[E]%
+\\
+\>[B]{}\mathbf{type}\;\Conid{Symbol}\mathrel{=}\Conid{Char}{}\<[E]%
 \\
 \>[B]{}\mathbf{data}\;\Conid{PrefExp}\mathrel{=}\Conid{Num}\;\Conid{Number}{}\<[E]%
 \\
 \>[B]{}\hsindent{14}{}\<[14]%
-\>[14]{}\mid \Conid{Op1}\;(\Conid{Number}\to \Conid{Number})\;\Conid{PrefExp}{}\<[E]%
+\>[14]{}\mid \Conid{Op1}\;\Conid{Symbol}\;(\Conid{Number}\to \Conid{Number})\;\Conid{PrefExp}{}\<[E]%
 \\
 \>[B]{}\hsindent{14}{}\<[14]%
-\>[14]{}\mid \Conid{Op2}\;(\Conid{Number}\to \Conid{Number}\to \Conid{Number})\;\Conid{PrefExp}\;\Conid{PrefExp}{}\<[E]%
+\>[14]{}\mid \Conid{Op2}\;\Conid{Symbol}\;(\Conid{Number}\to \Conid{Number}\to \Conid{Number})\;\Conid{PrefExp}\;\Conid{PrefExp}{}\<[E]%
 \ColumnHook
 \end{hscode}\resethooks
+To make values of the type \text{\ttfamily PrefExp} visible (in ghci for example), we define its show function:
+\begin{hscode}\SaveRestoreHook
+\column{B}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{5}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{9}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{E}{@{}>{\hspre}l<{\hspost}@{}}%
+\>[B]{}\mathbf{instance}\;\Conid{Show}\;\Conid{PrefExp}\;\mathbf{where}{}\<[E]%
+\\
+\>[B]{}\hsindent{5}{}\<[5]%
+\>[5]{}\Varid{show}\;(\Conid{Num}\;\Varid{n})\mathrel{=}\Varid{show}\;\Varid{n}{}\<[E]%
+\\
+\>[B]{}\hsindent{5}{}\<[5]%
+\>[5]{}\Varid{show}\;(\Conid{Op1}\;\Varid{c}\;\anonymous \;\Varid{prefExp})\mathrel{=}(\Varid{c}\mathbin{:}\text{\ttfamily \char34 ~\char34})\plus \Varid{show}\;\Varid{prefExp}{}\<[E]%
+\\
+\>[B]{}\hsindent{5}{}\<[5]%
+\>[5]{}\Varid{show}\;(\Conid{Op2}\;\Varid{c}\;\anonymous \;\Varid{prefExp1}\;\Varid{prefExp2})\mathrel{=}{}\<[E]%
+\\
+\>[5]{}\hsindent{4}{}\<[9]%
+\>[9]{}(\Varid{c}\mathbin{:}\text{\ttfamily \char34 ~\char34})\plus \Varid{show}\;\Varid{prefExp1}\plus \text{\ttfamily \char34 ~\char34}\plus \Varid{show}\;\Varid{prefExp2}{}\<[E]%
+\ColumnHook
+\end{hscode}\resethooks
+
+Let's begin with some helper functions for our parser:
+\begin{hscode}\SaveRestoreHook
+\column{B}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{E}{@{}>{\hspre}l<{\hspost}@{}}%
+\>[B]{}\Varid{trim}\mathbin{::}\Conid{String}\to \Conid{String}{}\<[E]%
+\\
+\>[B]{}\Varid{trim}\mathrel{=}\Varid{dropWhile}\;\Varid{isSpace}{}\<[E]%
+\ColumnHook
+\end{hscode}\resethooks
+
 \end{document}
