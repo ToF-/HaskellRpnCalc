@@ -3,6 +3,7 @@
 %include lhs2TeX.fmt
 %include lhs2TeX.sty
 %include spacing.fmt
+%include polycode.fmt
 
 \begin{document}
 \setlength{\parindent}{0em}

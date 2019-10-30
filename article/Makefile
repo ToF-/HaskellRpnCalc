@@ -1,4 +1,8 @@
-article: Specs.lhs Rpn.lhs Calc.lhs
+prefix: Prefix.lhs
+	lhs2tex Prefix.lhs >Prefix.tex
+	pdflatex Prefix.tex
+
+article: Specs.lhs Rpn.lhs Calc.lhs 
 	lhs2tex Rpn.lhs >Rpn.tex
 	pdflatex Rpn.tex
 	lhs2tex Specs.lhs >Specs.tex

@@ -94,12 +94,179 @@
 %
 
 
+%
+%
+%
+%
+%
+% This package provides two environments suitable to take the place
+% of hscode, called "plainhscode" and "arrayhscode". 
+%
+% The plain environment surrounds each code block by vertical space,
+% and it uses \abovedisplayskip and \belowdisplayskip to get spacing
+% similar to formulas. Note that if these dimensions are changed,
+% the spacing around displayed math formulas changes as well.
+% All code is indented using \leftskip.
+%
+% Changed 19.08.2004 to reflect changes in colorcode. Should work with
+% CodeGroup.sty.
+%
+\ReadOnlyOnce{polycode.fmt}%
+\makeatletter
+
+\newcommand{\hsnewpar}[1]%
+  {{\parskip=0pt\parindent=0pt\par\vskip #1\noindent}}
+
+% can be used, for instance, to redefine the code size, by setting the
+% command to \small or something alike
+\newcommand{\hscodestyle}{}
+
+% The command \sethscode can be used to switch the code formatting
+% behaviour by mapping the hscode environment in the subst directive
+% to a new LaTeX environment.
+
+\newcommand{\sethscode}[1]%
+  {\expandafter\let\expandafter\hscode\csname #1\endcsname
+   \expandafter\let\expandafter\endhscode\csname end#1\endcsname}
+
+% "compatibility" mode restores the non-polycode.fmt layout.
+
+\newenvironment{compathscode}%
+  {\par\noindent
+   \advance\leftskip\mathindent
+   \hscodestyle
+   \let\\=\@normalcr
+   \let\hspre\(\let\hspost\)%
+   \pboxed}%
+  {\endpboxed\)%
+   \par\noindent
+   \ignorespacesafterend}
+
+\newcommand{\compaths}{\sethscode{compathscode}}
+
+% "plain" mode is the proposed default.
+% It should now work with \centering.
+% This required some changes. The old version
+% is still available for reference as oldplainhscode.
+
+\newenvironment{plainhscode}%
+  {\hsnewpar\abovedisplayskip
+   \advance\leftskip\mathindent
+   \hscodestyle
+   \let\hspre\(\let\hspost\)%
+   \pboxed}%
+  {\endpboxed%
+   \hsnewpar\belowdisplayskip
+   \ignorespacesafterend}
+
+\newenvironment{oldplainhscode}%
+  {\hsnewpar\abovedisplayskip
+   \advance\leftskip\mathindent
+   \hscodestyle
+   \let\\=\@normalcr
+   \(\pboxed}%
+  {\endpboxed\)%
+   \hsnewpar\belowdisplayskip
+   \ignorespacesafterend}
+
+% Here, we make plainhscode the default environment.
+
+\newcommand{\plainhs}{\sethscode{plainhscode}}
+\newcommand{\oldplainhs}{\sethscode{oldplainhscode}}
+\plainhs
+
+% The arrayhscode is like plain, but makes use of polytable's
+% parray environment which disallows page breaks in code blocks.
+
+\newenvironment{arrayhscode}%
+  {\hsnewpar\abovedisplayskip
+   \advance\leftskip\mathindent
+   \hscodestyle
+   \let\\=\@normalcr
+   \(\parray}%
+  {\endparray\)%
+   \hsnewpar\belowdisplayskip
+   \ignorespacesafterend}
+
+\newcommand{\arrayhs}{\sethscode{arrayhscode}}
+
+% The mathhscode environment also makes use of polytable's parray 
+% environment. It is supposed to be used only inside math mode 
+% (I used it to typeset the type rules in my thesis).
+
+\newenvironment{mathhscode}%
+  {\parray}{\endparray}
+
+\newcommand{\mathhs}{\sethscode{mathhscode}}
+
+% texths is similar to mathhs, but works in text mode.
+
+\newenvironment{texthscode}%
+  {\(\parray}{\endparray\)}
+
+\newcommand{\texths}{\sethscode{texthscode}}
+
+% The framed environment places code in a framed box.
+
+\def\codeframewidth{\arrayrulewidth}
+\RequirePackage{calc}
+
+\newenvironment{framedhscode}%
+  {\parskip=\abovedisplayskip\par\noindent
+   \hscodestyle
+   \arrayrulewidth=\codeframewidth
+   \tabular{@{}|p{\linewidth-2\arraycolsep-2\arrayrulewidth-2pt}|@{}}%
+   \hline\framedhslinecorrect\\{-1.5ex}%
+   \let\endoflinesave=\\
+   \let\\=\@normalcr
+   \(\pboxed}%
+  {\endpboxed\)%
+   \framedhslinecorrect\endoflinesave{.5ex}\hline
+   \endtabular
+   \parskip=\belowdisplayskip\par\noindent
+   \ignorespacesafterend}
+
+\newcommand{\framedhslinecorrect}[2]%
+  {#1[#2]}
+
+\newcommand{\framedhs}{\sethscode{framedhscode}}
+
+% The inlinehscode environment is an experimental environment
+% that can be used to typeset displayed code inline.
+
+\newenvironment{inlinehscode}%
+  {\(\def\column##1##2{}%
+   \let\>\undefined\let\<\undefined\let\\\undefined
+   \newcommand\>[1][]{}\newcommand\<[1][]{}\newcommand\\[1][]{}%
+   \def\fromto##1##2##3{##3}%
+   \def\nextline{}}{\) }%
+
+\newcommand{\inlinehs}{\sethscode{inlinehscode}}
+
+% The joincode environment is a separate environment that
+% can be used to surround and thereby connect multiple code
+% blocks.
+
+\newenvironment{joincode}%
+  {\let\orighscode=\hscode
+   \let\origendhscode=\endhscode
+   \def\endhscode{\def\hscode{\endgroup\def\@currenvir{hscode}\\}\begingroup}
+   %\let\SaveRestoreHook=\empty
+   %\let\ColumnHook=\empty
+   %\let\resethooks=\empty
+   \orighscode\def\hscode{\endgroup\def\@currenvir{hscode}}}%
+  {\origendhscode
+   \global\let\hscode=\orighscode
+   \global\let\endhscode=\origendhscode}%
+
+\makeatother
+\EndFmtInput
+%
 
 \begin{document}
 \setlength{\parindent}{0em}
 This is the module for the reverse polish notation calculator. 
-\begingroup\par\noindent\advance\leftskip\mathindent\(
-\begin{pboxed}\SaveRestoreHook
+\begin{hscode}\SaveRestoreHook
 \column{B}{@{}>{\hspre}l<{\hspost}@{}}%
 \column{E}{@{}>{\hspre}l<{\hspost}@{}}%
 \>[B]{}\mathbf{module}\;\Conid{Rpn}{}\<[E]%
@@ -110,11 +277,9 @@ This is the module for the reverse polish notation calculator.
 \\
 \>[B]{}\mathbf{import}\;\Conid{\Conid{Data}.Char}\;(\Varid{isDigit},\Varid{isSpace}){}\<[E]%
 \ColumnHook
-\end{pboxed}
-\)\par\noindent\endgroup\resethooks
+\end{hscode}\resethooks
 The calculator is given a \text{\ttfamily String} containing an RPN expression, and yields the value of this expression, a \text{\ttfamily Number}. Here we choose \text{\ttfamily Number} to be equivalent to \text{\ttfamily Integer}, but another numeric type would also work.
-\begingroup\par\noindent\advance\leftskip\mathindent\(
-\begin{pboxed}\SaveRestoreHook
+\begin{hscode}\SaveRestoreHook
 \column{B}{@{}>{\hspre}l<{\hspost}@{}}%
 \column{E}{@{}>{\hspre}l<{\hspost}@{}}%
 \>[B]{}\mathbf{type}\;\Conid{Number}\mathrel{=}\Conid{Integer}{}\<[E]%
@@ -123,11 +288,9 @@ The calculator is given a \text{\ttfamily String} containing an RPN expression, 
 \\
 \>[B]{}\Varid{rpn}\mathrel{=}\bot {}\<[E]%
 \ColumnHook
-\end{pboxed}
-\)\par\noindent\endgroup\resethooks
+\end{hscode}\resethooks
 The meaning of an RPN expression can be expressed as a list of \emph{tokens}. A token is either a value or an operator. Most operators operate on two numbers like \text{\ttfamily \char43{}} or \text{\ttfamily \char42{}}. Some of the operators are \emph{unary} operators, like \text{\ttfamily \char33{}}. Let's describe this in Haskell:
-\begingroup\par\noindent\advance\leftskip\mathindent\(
-\begin{pboxed}\SaveRestoreHook
+\begin{hscode}\SaveRestoreHook
 \column{B}{@{}>{\hspre}l<{\hspost}@{}}%
 \column{12}{@{}>{\hspre}l<{\hspost}@{}}%
 \column{19}{@{}>{\hspre}l<{\hspost}@{}}%
@@ -141,12 +304,10 @@ The meaning of an RPN expression can be expressed as a list of \emph{tokens}. A 
 \>[B]{}\hsindent{12}{}\<[12]%
 \>[12]{}\mid \Conid{Op2}\;(\Conid{Number}\to \Conid{Number}\to \Conid{Number}){}\<[E]%
 \ColumnHook
-\end{pboxed}
-\)\par\noindent\endgroup\resethooks
-Since we cannot really \text{\ttfamily show} a value of type \text{\ttfamily Number~\char45{}\char62{}~Number}, let's define specific "evasive" way of showing a token:
+\end{hscode}\resethooks
+Since we cannot \text{\ttfamily show} a value of type \text{\ttfamily Number~\char45{}\char62{}~Number}, let's define a specific "evasive" way of showing a token:
 
-\begingroup\par\noindent\advance\leftskip\mathindent\(
-\begin{pboxed}\SaveRestoreHook
+\begin{hscode}\SaveRestoreHook
 \column{B}{@{}>{\hspre}l<{\hspost}@{}}%
 \column{5}{@{}>{\hspre}l<{\hspost}@{}}%
 \column{E}{@{}>{\hspre}l<{\hspost}@{}}%
@@ -161,12 +322,10 @@ Since we cannot really \text{\ttfamily show} a value of type \text{\ttfamily Num
 \>[B]{}\hsindent{5}{}\<[5]%
 \>[5]{}\Varid{show}\;(\Conid{Op2}\;\anonymous )\mathrel{=}\text{\ttfamily \char34 <op2>\char34}{}\<[E]%
 \ColumnHook
-\end{pboxed}
-\)\par\noindent\endgroup\resethooks
+\end{hscode}\resethooks
 
 To evaluate the expression, we execute each token on a \emph{stack}, a structure that allows for inserting and removing numbers in a \emph{last in, first out} fashion. A stack can either be empty (in which case applying an operator should result in a program error) or have an item followed by a possibly empty sequence of item previously entered on the stack.
-\begingroup\par\noindent\advance\leftskip\mathindent\(
-\begin{pboxed}\SaveRestoreHook
+\begin{hscode}\SaveRestoreHook
 \column{B}{@{}>{\hspre}l<{\hspost}@{}}%
 \column{5}{@{}>{\hspre}l<{\hspost}@{}}%
 \column{12}{@{}>{\hspre}l<{\hspost}@{}}%
@@ -179,11 +338,9 @@ To evaluate the expression, we execute each token on a \emph{stack}, a structure
 \>[B]{}\hsindent{5}{}\<[5]%
 \>[5]{}\mathbf{deriving}\;(\Conid{Show}){}\<[E]%
 \ColumnHook
-\end{pboxed}
-\)\par\noindent\endgroup\resethooks
+\end{hscode}\resethooks
 We can create an empty stack, and also tell if a stack is empty.
-\begingroup\par\noindent\advance\leftskip\mathindent\(
-\begin{pboxed}\SaveRestoreHook
+\begin{hscode}\SaveRestoreHook
 \column{B}{@{}>{\hspre}l<{\hspost}@{}}%
 \column{15}{@{}>{\hspre}l<{\hspost}@{}}%
 \column{E}{@{}>{\hspre}l<{\hspost}@{}}%
@@ -198,22 +355,18 @@ We can create an empty stack, and also tell if a stack is empty.
 \>[B]{}\Varid{isEmprt}\;\anonymous {}\<[15]%
 \>[15]{}\mathrel{=}\Conid{False}{}\<[E]%
 \ColumnHook
-\end{pboxed}
-\)\par\noindent\endgroup\resethooks
+\end{hscode}\resethooks
 \text{\ttfamily push}, takes a number, an existing stack, and puts that number on top of the existing stack, thus yielding a new stack.
-\begingroup\par\noindent\advance\leftskip\mathindent\(
-\begin{pboxed}\SaveRestoreHook
+\begin{hscode}\SaveRestoreHook
 \column{B}{@{}>{\hspre}l<{\hspost}@{}}%
 \column{E}{@{}>{\hspre}l<{\hspost}@{}}%
 \>[B]{}\Varid{push}\mathbin{::}\Conid{Number}\to \Conid{Stack}\to \Conid{Stack}{}\<[E]%
 \\
 \>[B]{}\Varid{push}\mathrel{=}\Conid{Item}{}\<[E]%
 \ColumnHook
-\end{pboxed}
-\)\par\noindent\endgroup\resethooks
+\end{hscode}\resethooks
 \text{\ttfamily pop}, extracts the number at the top and returns this number and the stack without this number. Popping a number from the empty stack results in a progam error. 
-\begingroup\par\noindent\advance\leftskip\mathindent\(
-\begin{pboxed}\SaveRestoreHook
+\begin{hscode}\SaveRestoreHook
 \column{B}{@{}>{\hspre}l<{\hspost}@{}}%
 \column{E}{@{}>{\hspre}l<{\hspost}@{}}%
 \>[B]{}\Varid{pop}\mathbin{::}\Conid{Stack}\to (\Conid{Number},\Conid{Stack}){}\<[E]%
@@ -222,11 +375,9 @@ We can create an empty stack, and also tell if a stack is empty.
 \\
 \>[B]{}\Varid{pop}\;\Conid{Empty}\mathrel{=}\Varid{error}\;\text{\ttfamily \char34 empty~stack\char34}{}\<[E]%
 \ColumnHook
-\end{pboxed}
-\)\par\noindent\endgroup\resethooks
+\end{hscode}\resethooks
 Here are two functions to convert the content of a stack into a list of numbers and vice versa.
-\begingroup\par\noindent\advance\leftskip\mathindent\(
-\begin{pboxed}\SaveRestoreHook
+\begin{hscode}\SaveRestoreHook
 \column{B}{@{}>{\hspre}l<{\hspost}@{}}%
 \column{5}{@{}>{\hspre}l<{\hspost}@{}}%
 \column{9}{@{}>{\hspre}l<{\hspost}@{}}%
@@ -253,11 +404,9 @@ Here are two functions to convert the content of a stack into a list of numbers 
 \>[B]{}\Varid{fromList}{}\<[11]%
 \>[11]{}\mathrel{=}\Varid{foldl}\;(\Varid{flip}\;\Varid{push})\;\Conid{Empty}{}\<[E]%
 \ColumnHook
-\end{pboxed}
-\)\par\noindent\endgroup\resethooks
+\end{hscode}\resethooks
 Applying the token \text{\ttfamily Number~} $n$ on the stack results in pushing the integer $n$ on the top op the stack. Applying an unary operator consists in applying the operator on the top of the stack, while applying a binary operator is done by pulling two values from the stack, then pushing the result of the operation. 
-\begingroup\par\noindent\advance\leftskip\mathindent\(
-\begin{pboxed}\SaveRestoreHook
+\begin{hscode}\SaveRestoreHook
 \column{B}{@{}>{\hspre}l<{\hspost}@{}}%
 \column{5}{@{}>{\hspre}l<{\hspost}@{}}%
 \column{9}{@{}>{\hspre}l<{\hspost}@{}}%
@@ -284,23 +433,19 @@ Applying the token \text{\ttfamily Number~} $n$ on the stack results in pushing 
 \>[5]{}\hsindent{4}{}\<[9]%
 \>[9]{}(\Varid{m},\Varid{st''})\mathrel{=}\Varid{pop}\;\Varid{st'}{}\<[E]%
 \ColumnHook
-\end{pboxed}
-\)\par\noindent\endgroup\resethooks
+\end{hscode}\resethooks
 We can now evaluate expressions when conveyed as a list of RPN tokens. For example apply the following tokens to a stack containing a temperature value will convert this value from Celsius to Fahreinheit ($ F = \frac{9C}{5} + 32$) : \text{\ttfamily \char91{}Val~9\char44{}~Op2~\char40{}\char42{}\char41{}\char44{}~Val~5\char44{}~Op2~div\char44{}~Val~32\char44{}~Op2~\char40{}\char43{}\char41{}\char93{}}\\
 The remaining problem is to translate a string representing an RPN expression into a list of tokens. This is the work of a \text{\ttfamily rpnParser}, which itself is a combination of simpler parsers. \\
-\begingroup\par\noindent\advance\leftskip\mathindent\(
-\begin{pboxed}\SaveRestoreHook
+\begin{hscode}\SaveRestoreHook
 \column{B}{@{}>{\hspre}l<{\hspost}@{}}%
 \column{E}{@{}>{\hspre}l<{\hspost}@{}}%
 \>[B]{}\mathbf{type}\;\Conid{Parser}\mathrel{=}\Conid{String}\to ([\mskip1.5mu \Conid{Token}\mskip1.5mu],\Conid{String}){}\<[E]%
 \ColumnHook
-\end{pboxed}
-\)\par\noindent\endgroup\resethooks
+\end{hscode}\resethooks
 The principle of a parser is to recognize a given pattern in a given string, and return a list of tokens and the part of the string that remains to be parsed. If the pattern is present in the input string, the list contains the tokens that were recognized, if not, the list is empty, and the remaining string is the same as the input string. 
 
 For example a parser for the operator \text{\ttfamily \char33{}} recognize only that character. Every other string value will result in a empty list of tokens.
-\begingroup\par\noindent\advance\leftskip\mathindent\(
-\begin{pboxed}\SaveRestoreHook
+\begin{hscode}\SaveRestoreHook
 \column{B}{@{}>{\hspre}l<{\hspost}@{}}%
 \column{E}{@{}>{\hspre}l<{\hspost}@{}}%
 \>[B]{}\Varid{pFactorial}\mathbin{::}\Conid{Parser}{}\<[E]%
@@ -309,12 +454,10 @@ For example a parser for the operator \text{\ttfamily \char33{}} recognize only 
 \\
 \>[B]{}\Varid{pFactorial}\;\Varid{s}\mathrel{=}([\mskip1.5mu \mskip1.5mu],\Varid{s}){}\<[E]%
 \ColumnHook
-\end{pboxed}
-\)\par\noindent\endgroup\resethooks
+\end{hscode}\resethooks
 Instead of repeating this form for every operator, we can create a "factory of parser" : 
 
-\begingroup\par\noindent\advance\leftskip\mathindent\(
-\begin{pboxed}\SaveRestoreHook
+\begin{hscode}\SaveRestoreHook
 \column{B}{@{}>{\hspre}l<{\hspost}@{}}%
 \column{5}{@{}>{\hspre}l<{\hspost}@{}}%
 \column{20}{@{}>{\hspre}l<{\hspost}@{}}%
@@ -330,11 +473,9 @@ Instead of repeating this form for every operator, we can create a "factory of p
 \>[5]{}\anonymous {}\<[20]%
 \>[20]{}\to ([\mskip1.5mu \mskip1.5mu],\Varid{s}){}\<[E]%
 \ColumnHook
-\end{pboxed}
-\)\par\noindent\endgroup\resethooks
+\end{hscode}\resethooks
 We can combine parsers in a way such that the parsed expression is recognized if contains one pattern or the other. 
-\begingroup\par\noindent\advance\leftskip\mathindent\(
-\begin{pboxed}\SaveRestoreHook
+\begin{hscode}\SaveRestoreHook
 \column{B}{@{}>{\hspre}l<{\hspost}@{}}%
 \column{5}{@{}>{\hspre}l<{\hspost}@{}}%
 \column{9}{@{}>{\hspre}l<{\hspost}@{}}%
@@ -361,12 +502,10 @@ We can combine parsers in a way such that the parsed expression is recognized if
 \>[5]{}\hsindent{8}{}\<[13]%
 \>[13]{}\Conid{True}\to \Varid{parserB}\;\Varid{sA}{}\<[E]%
 \ColumnHook
-\end{pboxed}
-\)\par\noindent\endgroup\resethooks
+\end{hscode}\resethooks
 
 Then a parser recognizing any of our operators can be created by folding this 'or' on a list mapping each char with its token:
-\begingroup\par\noindent\advance\leftskip\mathindent\(
-\begin{pboxed}\SaveRestoreHook
+\begin{hscode}\SaveRestoreHook
 \column{B}{@{}>{\hspre}l<{\hspost}@{}}%
 \column{14}{@{}>{\hspre}l<{\hspost}@{}}%
 \column{E}{@{}>{\hspre}l<{\hspost}@{}}%
@@ -381,11 +520,9 @@ Then a parser recognizing any of our operators can be created by folding this 'o
 \\
 \>[B]{}\Varid{pOperator}\mathrel{=}\Varid{foldl1}\;(\mathbin{<|>})\;(\Varid{map}\;(\Varid{uncurry}\;\Varid{pOperatorFor})\;\Varid{operators}){}\<[E]%
 \ColumnHook
-\end{pboxed}
-\)\par\noindent\endgroup\resethooks
+\end{hscode}\resethooks
 Parsing a number is simple: extract all characters that are digits, and produce the \text{\ttfamily Val} token, and the remaining part of the input string, or if there are no digits, return the empty list and the unchanged input string.
-\begingroup\par\noindent\advance\leftskip\mathindent\(
-\begin{pboxed}\SaveRestoreHook
+\begin{hscode}\SaveRestoreHook
 \column{B}{@{}>{\hspre}l<{\hspost}@{}}%
 \column{5}{@{}>{\hspre}l<{\hspost}@{}}%
 \column{E}{@{}>{\hspre}l<{\hspost}@{}}%
@@ -399,12 +536,10 @@ Parsing a number is simple: extract all characters that are digits, and produce 
 \>[B]{}\hsindent{5}{}\<[5]%
 \>[5]{}(\Varid{digits},\Varid{rest})\to ([\mskip1.5mu \Conid{Val}\;(\Varid{read}\;\Varid{digits})\mskip1.5mu],\Varid{rest}){}\<[E]%
 \ColumnHook
-\end{pboxed}
-\)\par\noindent\endgroup\resethooks
+\end{hscode}\resethooks
 Spaces in an RPN expression should be ignored. Thus the parser for space doesn't yield a specific token, it only trims the remaining string.
 
-\begingroup\par\noindent\advance\leftskip\mathindent\(
-\begin{pboxed}\SaveRestoreHook
+\begin{hscode}\SaveRestoreHook
 \column{B}{@{}>{\hspre}l<{\hspost}@{}}%
 \column{5}{@{}>{\hspre}l<{\hspost}@{}}%
 \column{E}{@{}>{\hspre}l<{\hspost}@{}}%
@@ -415,11 +550,9 @@ Spaces in an RPN expression should be ignored. Thus the parser for space doesn't
 \>[B]{}\hsindent{5}{}\<[5]%
 \>[5]{}\mathbf{where}\;(\anonymous ,\Varid{s'})\mathrel{=}\Varid{break}\;(\neg \mathbin{\circ}\Varid{isSpace})\;\Varid{s}{}\<[E]%
 \ColumnHook
-\end{pboxed}
-\)\par\noindent\endgroup\resethooks
+\end{hscode}\resethooks
 To parse an operator, take the first character of the input string and look it up in a list of all of operators, yielding the matching token.
-\begingroup\par\noindent\advance\leftskip\mathindent\(
-\begin{pboxed}\SaveRestoreHook
+\begin{hscode}\SaveRestoreHook
 \column{B}{@{}>{\hspre}l<{\hspost}@{}}%
 \column{5}{@{}>{\hspre}l<{\hspost}@{}}%
 \column{E}{@{}>{\hspre}l<{\hspost}@{}}%
@@ -435,7 +568,6 @@ To parse an operator, take the first character of the input string and look it u
 \>[B]{}\hsindent{5}{}\<[5]%
 \>[5]{}\Conid{Just}\;\Varid{op}\to ([\mskip1.5mu \Varid{op}\mskip1.5mu],\Varid{cs}){}\<[E]%
 \ColumnHook
-\end{pboxed}
-\)\par\noindent\endgroup\resethooks
+\end{hscode}\resethooks
 
 \end{document}
