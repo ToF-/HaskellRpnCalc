@@ -29,15 +29,15 @@ number (c:s) | isSpace c = number s
 number (c:s) | isDigit c = [(Num n,s')] where [(n,s')] = accum 0 (c:s)
 number _ = []
 
-op1 :: Char -> (Number -> Number) -> Parser Char Token
-op1 o f (c:s) | c == o = [(Op1 c f, s)]
-op1 _ _ _ = []
+operator1 :: Char -> (Number -> Number) -> Parser Char Token
+operator1 o f (c:s) | c == o = [(Op1 c f, s)]
+operator1 _ _ _ = []
 
-negation = op1 '~' negate
-factorial = op1 '!' (\n -> product [1..n])
+negation = operator1 '~' negate
+factorial = operator1 '!' (\n -> product [1..n])
 
 infix 2 <|>
-
+ 
 (<|>) :: Parser a b -> Parser a b -> Parser a b
 parserA <|> parserB = \s -> case parserA s of
     [] -> parserB s
@@ -45,11 +45,11 @@ parserA <|> parserB = \s -> case parserA s of
 
 unary = negation <|> factorial
 
-op2 :: Char -> (Number -> Number -> Number) -> Parser Char Token
-op2 o f (c:s) | c == o = [(Op2 c f, s)]
-op2 _ _ _ = []
+operator2 :: Char -> (Number -> Number -> Number) -> Parser Char Token
+operator2 o f (c:s) | c == o = [(Op2 c f, s)]
+operator2 _ _ _ = []
 
-binary = foldl1 (<|>) (map (uncurry op2) binOps)
+binary = foldl1 (<|>) (map (uncurry operator2) binOps)
 
 binOps = [('+',(+)),('-',flip (-)),('*',(*)),('/',(flip div)),('%',flip mod)]
 
@@ -60,8 +60,13 @@ parserA <&> parserB = \s -> case parserA s of
     [] -> []
     [(a,s')] -> parserB s'
 
-expr :: Parser Char [Token]
-expr s = [([t],s')] 
-    where
-    [(t,s')] = number s 
-expr _ = []
+
+num :: [Token] -> Parser Char [Token]
+num ts s = case number s of
+    [] -> [(ts,s)]
+    [(t,s')] -> [(ts ++ [t], s')]
+
+unaryOp :: [Token] -> Parser Char [Token] 
+unaryOp ts s = case unary s of
+    [(t,s')] -> [(ts ++ [t], s')]
+    [] -> [(ts,s)] 
