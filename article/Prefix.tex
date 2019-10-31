@@ -443,11 +443,11 @@ To parse a number, ignore spaces, then if one digit is found, accumulate all the
 \>[B]{}\Varid{number}\;\anonymous \mathrel{=}[\mskip1.5mu \mskip1.5mu]{}\<[E]%
 \ColumnHook
 \end{hscode}\resethooks
-A parser for negation should recognize the symbol \text{\ttfamily \char96{}\char126{}\char96{}} and yield an unary operator token with the matching function. The same should ber done for the symbol \text{\ttfamily \char39{}\char33{}\char39{}} and the factorial operation. This can be generalized into a parser for any unary operator.
+A parser for negation should recognize the symbol \text{\ttfamily \char96{}\char126{}\char96{}} and yield an unary operator token with the matching function. The same should be done for the symbol \text{\ttfamily \char39{}\char33{}\char39{}} and the factorial operation. This can be generalized into a parser for any unary operator.
 \begin{hscode}\SaveRestoreHook
 \column{B}{@{}>{\hspre}l<{\hspost}@{}}%
 \column{E}{@{}>{\hspre}l<{\hspost}@{}}%
-\>[B]{}\Varid{unaryOp}\mathbin{::}\Conid{Symbole}\to (\Conid{Number}\to \Conid{Number})\to \Conid{Parser}{}\<[E]%
+\>[B]{}\Varid{unaryOp}\mathbin{::}\Conid{Symbol}\to (\Conid{Number}\to \Conid{Number})\to \Conid{Parser}{}\<[E]%
 \\
 \>[B]{}\Varid{unaryOp}\;\Varid{op}\;\Varid{f}\;(\Varid{c}\mathbin{:}\Varid{s})\mid \Varid{c}\equiv \Varid{op}\mathrel{=}[\mskip1.5mu (\Conid{Op1}\;\Varid{op}\;\Varid{f},\Varid{s})\mskip1.5mu]{}\<[E]%
 \\
@@ -462,4 +462,25 @@ A parser for negation should recognize the symbol \text{\ttfamily \char96{}\char
 \>[B]{}\Varid{factorial}\mathrel{=}\Varid{unaryOp}\;\text{\ttfamily '!'}\;(\lambda \Varid{n}\to \Varid{product}\;[\mskip1.5mu \mathrm{1}\mathinner{\ldotp\ldotp}\Varid{n}\mskip1.5mu]){}\<[E]%
 \ColumnHook
 \end{hscode}\resethooks
+We can combine two parsers in a way such that one or the other token can be recognized.
+\begin{hscode}\SaveRestoreHook
+\column{B}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{5}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{8}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{E}{@{}>{\hspre}l<{\hspost}@{}}%
+\>[B]{}\mathbf{infix}\;\mathrm{2}\mathbin{<|>}{}\<[E]%
+\\[\blanklineskip]%
+\>[B]{}(\mathbin{<|>})\mathbin{::}\Conid{Parser}\to \Conid{Parser}\to \Conid{Parser}{}\<[E]%
+\\
+\>[B]{}\Varid{parserA}\mathbin{<|>}\Varid{parserB}\mathrel{=}\lambda \Varid{s}\to \mathbf{let}\;\Varid{result}\mathrel{=}\Varid{parserA}\;\Varid{s}\;\mathbf{in}\;\mathbf{case}\;\Varid{result}\;\mathbf{of}{}\<[E]%
+\\
+\>[B]{}\hsindent{5}{}\<[5]%
+\>[5]{}[\mskip1.5mu \mskip1.5mu]\to \Varid{parserB}\;\Varid{s}{}\<[E]%
+\\
+\>[B]{}\hsindent{5}{}\<[5]%
+\>[5]{}\anonymous {}\<[8]%
+\>[8]{}\to \Varid{result}{}\<[E]%
+\ColumnHook
+\end{hscode}\resethooks
+
 \end{document}
