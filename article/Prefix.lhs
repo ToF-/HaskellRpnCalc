@@ -32,13 +32,22 @@
 
 \begin{document}
 \setlength{\parindent}{0em}
-Let's write a parser for expression in prefix notation. We will need built-in functions to detect a space or a digit character
+Let's write a parser for expression in prefix notation. We will need built-in functions to detect a space or a digit character. 
 \begin{code}
 module Prefix
 where
 import Data.Char (isSpace, isDigit, digitToInt)
-\end{code}{code}
-
+\end{code}
+First let's define some operators that our parser will recognize.
+\begin{code}
+sPlus = '+'
+sMinus = '-'
+sMult  = '*'
+sDiv   = '/'
+sMod   = '%'
+sNegate= '~'
+sFact  = '!'
+\end{code}
 A \emph{parser} is a function that breaks a string into components called \emph{tokens}.
 \begin{code}
 type Parser = String -> [(Token,String)]
@@ -77,16 +86,57 @@ instance Show PrefExp where
         (c :" ") ++ show prefExp1 ++ " " ++ show prefExp2
 \end{code}
 
-To parse a number 
+Our first parser should recognize a digit, convert that value from @Int@ and return the @Num@ token.
+\begin{code}
+digit :: Parser
+digit (c:s) | isDigit c = [(digitToNum c, s)]
+    where digitToNum = Num . fromIntegral . digitToInt
+digit _ = []
+
+\end{code}
+Another parser converts all successive digits into a @Num@ value.\\
+\begin{tabular}{rl}
+$0$ & 4807 \\
+$0\times{10}+4$               & 807 \\
+$(0\times{10}+4)\times{10}+8$ & 07 \\
+$((0\times{10}+4)\times{10}+8)$ & 07 \\
+$(((0\times{10}+4)\times{10}+8)\times{10}+0)$ & 7 \\
+$((((0\times{10}+4)\times{10}+8)\times{10}+0)\times{10}+7)$ &  \\
+\end{tabular}
+
+\begin{code}
+accum :: Integer -> Parser
+accum acc s = case digit s of
+    [] -> [(Num acc, s)]
+    [(Num d,s')] -> accum (acc * 10 + d) s'
+\end{code}
+To parse a number, ignore spaces, then if one digit is found, accumulate all the following digits into a number. Otherwise if no digit was found, yield the empty result.
 \begin{code}
 number :: Parser
 number (c:s) | isSpace c = number s
-number (c:s) | isDigit c = number' (digitToInt c) s
-    where
-    number' acc [] = [(Num (fromIntegral acc), [])]
-    number' acc (c:s) | isDigit c = number' (acc * 10 + (digitToInt c)) s
-                      | otherwise = [(Num (fromIntegral acc), c:s)]
+number (c:s) | isDigit c = accum 0 (c:s)
 number _ = []
+\end{code}
+A parser for negation should recognize the symbol @`~`@ and yield an unary operator token with the matching function. The same should be done for the symbol @'!'@ and the factorial operation. This can be generalized into a parser for any unary operator.
+\begin{code}
+unaryOp :: Symbol -> (Number -> Number) -> Parser
+unaryOp op f (c:s) | c == op = [(Op1 op f, s)]
+unaryOp _ _ _ = []
+
+negation :: Parser
+negation = unaryOp '~' negate
+
+factorial :: Parser
+factorial = unaryOp '!' (\n -> product [1..n])
+\end{code}
+We can combine two parsers in a way such that one or the other token can be recognized.
+\begin{code}
+infix 2 <|>
+
+(<|>) :: Parser -> Parser -> Parser
+parserA <|> parserB = \s -> let result = parserA s in case result of
+    [] -> parserB s
+    _  -> result
     
 
 \end{code}

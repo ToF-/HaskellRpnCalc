@@ -290,7 +290,7 @@
 
 \begin{document}
 \setlength{\parindent}{0em}
-Let's write a parser for expression in prefix notation. We will need built-in functions to detect a space or a digit character
+Let's write a parser for expression in prefix notation. We will need built-in functions to detect a space or a digit character. 
 \begin{hscode}\SaveRestoreHook
 \column{B}{@{}>{\hspre}l<{\hspost}@{}}%
 \column{E}{@{}>{\hspre}l<{\hspost}@{}}%
@@ -298,11 +298,33 @@ Let's write a parser for expression in prefix notation. We will need built-in fu
 \\
 \>[B]{}\mathbf{where}{}\<[E]%
 \\
-\>[B]{}\mathbf{import}\;\Conid{\Conid{Data}.Char}\;(\Varid{isSpace},\Varid{isDigit}){}\<[E]%
+\>[B]{}\mathbf{import}\;\Conid{\Conid{Data}.Char}\;(\Varid{isSpace},\Varid{isDigit},\Varid{digitToInt}){}\<[E]%
 \ColumnHook
 \end{hscode}\resethooks
-{code}
-
+First let's define some operators that our parser will recognize.
+\begin{hscode}\SaveRestoreHook
+\column{B}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{8}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{E}{@{}>{\hspre}l<{\hspost}@{}}%
+\>[B]{}\Varid{sPlus}\mathrel{=}\text{\ttfamily '+'}{}\<[E]%
+\\
+\>[B]{}\Varid{sMinus}\mathrel{=}\text{\ttfamily '-'}{}\<[E]%
+\\
+\>[B]{}\Varid{sMult}{}\<[8]%
+\>[8]{}\mathrel{=}\text{\ttfamily '*'}{}\<[E]%
+\\
+\>[B]{}\Varid{sDiv}{}\<[8]%
+\>[8]{}\mathrel{=}\text{\ttfamily '/'}{}\<[E]%
+\\
+\>[B]{}\Varid{sMod}{}\<[8]%
+\>[8]{}\mathrel{=}\text{\ttfamily '\%'}{}\<[E]%
+\\
+\>[B]{}\Varid{sNegate}\mathrel{=}\text{\ttfamily '\char126 '}{}\<[E]%
+\\
+\>[B]{}\Varid{sFact}{}\<[8]%
+\>[8]{}\mathrel{=}\text{\ttfamily '!'}{}\<[E]%
+\ColumnHook
+\end{hscode}\resethooks
 A \emph{parser} is a function that breaks a string into components called \emph{tokens}.
 \begin{hscode}\SaveRestoreHook
 \column{B}{@{}>{\hspre}l<{\hspost}@{}}%
@@ -368,14 +390,76 @@ To make values of the type \text{\ttfamily PrefExp} visible (in ghci for example
 \ColumnHook
 \end{hscode}\resethooks
 
-Let's begin with some helper functions for our parser:
+Our first parser should recognize a digit, convert that value from \text{\ttfamily Int} and return the \text{\ttfamily Num} token.
+\begin{hscode}\SaveRestoreHook
+\column{B}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{5}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{E}{@{}>{\hspre}l<{\hspost}@{}}%
+\>[B]{}\Varid{digit}\mathbin{::}\Conid{Parser}{}\<[E]%
+\\
+\>[B]{}\Varid{digit}\;(\Varid{c}\mathbin{:}\Varid{s})\mid \Varid{isDigit}\;\Varid{c}\mathrel{=}[\mskip1.5mu (\Varid{digitToNum}\;\Varid{c},\Varid{s})\mskip1.5mu]{}\<[E]%
+\\
+\>[B]{}\hsindent{5}{}\<[5]%
+\>[5]{}\mathbf{where}\;\Varid{digitToNum}\mathrel{=}\Conid{Num}\mathbin{\circ}\Varid{fromIntegral}\mathbin{\circ}\Varid{digitToInt}{}\<[E]%
+\\
+\>[B]{}\Varid{digit}\;\anonymous \mathrel{=}[\mskip1.5mu \mskip1.5mu]{}\<[E]%
+\ColumnHook
+\end{hscode}\resethooks
+Another parser converts all successive digits into a \text{\ttfamily Num} value.\\
+\begin{tabular}{rl}
+$0$ & 4807 \\
+$0\times{10}+4$               & 807 \\
+$(0\times{10}+4)\times{10}+8$ & 07 \\
+$((0\times{10}+4)\times{10}+8)$ & 07 \\
+$(((0\times{10}+4)\times{10}+8)\times{10}+0)$ & 7 \\
+$((((0\times{10}+4)\times{10}+8)\times{10}+0)\times{10}+7)$ &  \\
+\end{tabular}
+
+\begin{hscode}\SaveRestoreHook
+\column{B}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{5}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{E}{@{}>{\hspre}l<{\hspost}@{}}%
+\>[B]{}\Varid{accum}\mathbin{::}\Conid{Integer}\to \Conid{Parser}{}\<[E]%
+\\
+\>[B]{}\Varid{accum}\;\Varid{acc}\;\Varid{s}\mathrel{=}\mathbf{case}\;\Varid{digit}\;\Varid{s}\;\mathbf{of}{}\<[E]%
+\\
+\>[B]{}\hsindent{5}{}\<[5]%
+\>[5]{}[\mskip1.5mu \mskip1.5mu]\to [\mskip1.5mu (\Conid{Num}\;\Varid{acc},\Varid{s})\mskip1.5mu]{}\<[E]%
+\\
+\>[B]{}\hsindent{5}{}\<[5]%
+\>[5]{}[\mskip1.5mu (\Conid{Num}\;\Varid{d},\Varid{s'})\mskip1.5mu]\to \Varid{accum}\;(\Varid{acc}\mathbin{*}\mathrm{10}\mathbin{+}\Varid{d})\;\Varid{s'}{}\<[E]%
+\ColumnHook
+\end{hscode}\resethooks
+To parse a number, ignore spaces, then if one digit is found, accumulate all the following digits into a number. Otherwise if no digit was found, yield the empty result.
 \begin{hscode}\SaveRestoreHook
 \column{B}{@{}>{\hspre}l<{\hspost}@{}}%
 \column{E}{@{}>{\hspre}l<{\hspost}@{}}%
-\>[B]{}\Varid{trim}\mathbin{::}\Conid{String}\to \Conid{String}{}\<[E]%
+\>[B]{}\Varid{number}\mathbin{::}\Conid{Parser}{}\<[E]%
 \\
-\>[B]{}\Varid{trim}\mathrel{=}\Varid{dropWhile}\;\Varid{isSpace}{}\<[E]%
+\>[B]{}\Varid{number}\;(\Varid{c}\mathbin{:}\Varid{s})\mid \Varid{isSpace}\;\Varid{c}\mathrel{=}\Varid{number}\;\Varid{s}{}\<[E]%
+\\
+\>[B]{}\Varid{number}\;(\Varid{c}\mathbin{:}\Varid{s})\mid \Varid{isDigit}\;\Varid{c}\mathrel{=}\Varid{accum}\;\mathrm{0}\;(\Varid{c}\mathbin{:}\Varid{s}){}\<[E]%
+\\
+\>[B]{}\Varid{number}\;\anonymous \mathrel{=}[\mskip1.5mu \mskip1.5mu]{}\<[E]%
 \ColumnHook
 \end{hscode}\resethooks
-
+A parser for negation should recognize the symbol \text{\ttfamily \char96{}\char126{}\char96{}} and yield an unary operator token with the matching function. The same should ber done for the symbol \text{\ttfamily \char39{}\char33{}\char39{}} and the factorial operation. This can be generalized into a parser for any unary operator.
+\begin{hscode}\SaveRestoreHook
+\column{B}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{E}{@{}>{\hspre}l<{\hspost}@{}}%
+\>[B]{}\Varid{unaryOp}\mathbin{::}\Conid{Symbole}\to (\Conid{Number}\to \Conid{Number})\to \Conid{Parser}{}\<[E]%
+\\
+\>[B]{}\Varid{unaryOp}\;\Varid{op}\;\Varid{f}\;(\Varid{c}\mathbin{:}\Varid{s})\mid \Varid{c}\equiv \Varid{op}\mathrel{=}[\mskip1.5mu (\Conid{Op1}\;\Varid{op}\;\Varid{f},\Varid{s})\mskip1.5mu]{}\<[E]%
+\\
+\>[B]{}\Varid{unaryOp}\;\anonymous \;\anonymous \;\anonymous \mathrel{=}[\mskip1.5mu \mskip1.5mu]{}\<[E]%
+\\[\blanklineskip]%
+\>[B]{}\Varid{negation}\mathbin{::}\Conid{Parser}{}\<[E]%
+\\
+\>[B]{}\Varid{negation}\mathrel{=}\Varid{unaryOp}\;\text{\ttfamily '\char126 '}\;\Varid{negate}{}\<[E]%
+\\[\blanklineskip]%
+\>[B]{}\Varid{factorial}\mathbin{::}\Conid{Parser}{}\<[E]%
+\\
+\>[B]{}\Varid{factorial}\mathrel{=}\Varid{unaryOp}\;\text{\ttfamily '!'}\;(\lambda \Varid{n}\to \Varid{product}\;[\mskip1.5mu \mathrm{1}\mathinner{\ldotp\ldotp}\Varid{n}\mskip1.5mu]){}\<[E]%
+\ColumnHook
+\end{hscode}\resethooks
 \end{document}
