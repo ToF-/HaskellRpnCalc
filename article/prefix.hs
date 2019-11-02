@@ -43,36 +43,75 @@ parserA <|> parserB = \s -> case parserA s of
     [] -> parserB s
     r  -> r
 
+unary :: Parser Char Token
 unary = negation <|> factorial
 
 parserForOp2 :: Char -> (Number -> Number -> Number) -> Parser Char Token
 parserForOp2 o f (c:s) | c == o = [(Op2 c f, s)]
 parserForOp2 _ _ _ = []
 
+binary :: Parser Char Token
 binary = foldl1 (<|>) (map (uncurry parserForOp2) binOps)
 
 binOps = [('+',(+)),('-',flip (-)),('*',(*)),('/',(flip div)),('%',flip mod)]
 
-token :: Parser a b -> Parser a [b]
-token parser = \s -> case parser s of
-    [(a,s')] -> [([a],s')]
-    [] -> []
+token :: Parser Char Token -> Parser Char [Token]
+token pT = \ts -> case pT ts of
+    [] -> []
+    [(t,ts')] -> [([t],ts')]
 
-seqp :: Parser a [b] -> Parser a [b] -> Parser a [b]
+seqp :: Parser Char [Token] -> Parser Char [Token] -> Parser Char [Token]
 parserA `seqp` parserB = \s -> case parserA s of
     [] -> []
     [(as,s')] -> case parserB s' of
         [] -> []
         [(bs,s'')] -> [(as++bs,s'')]
 
-altp :: Parser a [b] -> Parser a [b] -> Parser a [b]
+altp :: Parser Char [Token] -> Parser Char [Token] -> Parser Char [Token]
 parserA `altp` parserB =  \s -> case parserA s of
+    []        -> parserB s 
     [(as,s')] -> [(as,s')]  
-    [] -> case parserB s of
-        [(bs,s')] -> [(bs,s')]
-        [] -> []
 
 expr :: Parser Char [Token]
-expr =  token num 
+expr =  token num  
+  `altp` (expr `seqp` expr)
   `altp` (token binary `seqp` expr `seqp` expr)
   `altp` (token unary `seqp` expr)
+
+-- let's try something simpler
+
+data T = N | B | U
+    deriving (Eq, Show)
+
+type ParserE = Parser T [T]
+
+n,b,u :: T
+(n,b,u) = (N,B,U)
+
+
+pT :: T -> ParserE
+pT token = \ts -> case ts of
+    [] -> []
+    (t:ts') -> case t == token of
+        True -> [([t],ts')]
+        False -> [] 
+    
+a,s :: ParserE -> ParserE -> ParserE
+
+a pA pB = \s -> case pA s of
+    []       -> pB s
+    r        -> r
+
+s pA pB = \s -> case pA s of
+    []       -> []
+    [(t,s')] -> case pB s' of
+        [(t',s'')] -> [(t++t',s'')]
+        [] -> []
+
+pN,pB,pU,pE :: ParserE
+
+pN = pT N
+pB = pT B
+pU = pT U
+
+pE = pN `a` (pB `s` pE `s` pE) `a` (pU `s` pE)      
