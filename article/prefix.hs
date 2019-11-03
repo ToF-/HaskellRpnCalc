@@ -1,7 +1,6 @@
 import Data.Char
 import Data.List
 
-type Number = Integer
 
 data Token = Num Number
            | Op1 Char (Number -> Number)
@@ -74,29 +73,27 @@ parserA `altp` parserB =  \s -> case parserA s of
 
 expr :: Parser Char [Token]
 expr =  token num  
-  `altp` (expr `seqp` expr)
-  `altp` (token binary `seqp` expr `seqp` expr)
+  `altp` ((token binary `seqp` expr) `seqp` expr)
   `altp` (token unary `seqp` expr)
 
 -- let's try something simpler
 
-data T = N | B | U
-    deriving (Eq, Show)
+type Number = Integer
+type Binary = (Integer -> Integer -> Integer)
+type Unary = (Integer -> Integer)
+type Symbol = Char
+
+data T = N Number | B Symbol Binary | U Symbol Unary
+
+instance Show T where
+    show (N n) = "N" ++ show n
+    show (B c f) = "B" ++ [c]
+    show (U c f) = "U" ++ [c]
 
 type ParserE = Parser T [T]
 
-n,b,u :: T
-(n,b,u) = (N,B,U)
 
-
-pT :: T -> ParserE
-pT token = \ts -> case ts of
-    [] -> []
-    (t:ts') -> case t == token of
-        True -> [([t],ts')]
-        False -> [] 
-    
-a,s :: ParserE -> ParserE -> ParserE
+a,s :: Parser a [b] -> Parser a [b] -> Parser a [b]
 
 a pA pB = \s -> case pA s of
     []       -> pB s
@@ -108,10 +105,58 @@ s pA pB = \s -> case pA s of
         [(t',s'')] -> [(t++t',s'')]
         [] -> []
 
+n1,n2,pl,fa :: T
+n1 = N 42
+n2 = N 17
+pl = B '+' (+)
+fa = U '!' (\n -> product [1..n])
+
 pN,pB,pU,pE :: ParserE
 
-pN = pT N
-pB = pT B
-pU = pT U
+pN (N n:ts)  = [([N n],ts)]
+pN _ = []
+
+pB (B '+' f:ts) = [([B '+' f],ts)]
+pB _ = [] 
+
+pU (U '!' f:ts) = [([U '!' f],ts)]
+pU _ = [] 
 
 pE = pN `a` (pB `s` pE `s` pE) `a` (pU `s` pE)      
+
+test = pE [B '+' (+),N 42,U '!' (\n -> product [1..n]),N 17]
+
+pD :: Parser Char Number
+pD (c:s) | isDigit c = [(toNumber c, s)]
+pD _ = []
+
+toNumber = fromIntegral . digitToInt 
+
+pA :: Number -> Parser Char Number
+pA n s = case pD s of
+    [] -> [(n,s)]
+    [(d,s')] -> pA (n * 10 + d) s'
+
+pNT :: Parser Char T
+pNT (c:s) | isSpace c = pNT s
+pNT (c:s) | isDigit c = [(N n, s')] where [(n,s')] = pA 0 (c:s)
+pNT _ = []
+
+pBT :: Parser Char T
+pBT (c:s) | isSpace c = pBT s
+pBT ('+':s) = [(B '+' (+), s)]
+pBT ('*':s) = [(B '*' (*), s)]
+pBT _ = []
+
+pUT :: Parser Char T
+pUT (c:s) | isSpace c = pUT s
+pUT ('~':s) = [(U '~' negate, s)]
+pUT ('!':s) = [(U '!' (\n -> product [1..n]), s)]
+pUT _ = []
+
+pL :: Parser a b -> Parser a [b]
+pL p = \s -> case p s of
+    [] -> []
+    [(t,s')] -> [([t],s')]
+
+pLE = (pL pNT) `a` (pL pBT `s` pLE `s` pLE) `a` (pL pUT `s` pLE)
