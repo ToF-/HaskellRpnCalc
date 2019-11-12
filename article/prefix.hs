@@ -74,3 +74,22 @@ infixl 3 <.>
 expression = number 
           <|> binary <.> expression <.> expression 
           <|> unary <.> expression
+
+newtype P a = P { parse :: String -> [(a, String)] }
+
+instance Functor P where
+    fmap f m = P $ \s -> [ (f a, s') 
+                     | (a,s') <- parse m s]
+
+instance Applicative P where
+    pure = return
+    (<*>) = undefined
+
+    
+instance Monad P where
+    return t = P $ \s -> [(t,s)]
+    m >>= k = P $ \s -> [ (b,s'') 
+                      | (a,s') <- parse m s, 
+                        (b,s'') <- parse (k a) s'] 
+
+
