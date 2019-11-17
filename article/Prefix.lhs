@@ -29,116 +29,78 @@
 %include lhs2TeX.sty
 %include spacing.fmt
 %include polycode.fmt
-
+\newcommand\tab[1][1cm]{\hspace*{#1}}
 \begin{document}
 \setlength{\parindent}{0em}
-Let's write a parser for expression in prefix notation. We will need built-in functions to detect a space or a digit character. 
+Let's write a parser for expressions in prefix notation. Here are examples:\\
+
+\verb|*+42 17!5 | \tab $\rightarrow \tab (42+17)\times!5$ \\
+\verb|+4-3 +10-5| \tab $\rightarrow \tab (4+3-(10+(-5)))$ \\
+
+We will need built-in functions to detect a space or a digit character, so let's import these. 
 \begin{code}
 module Prefix
 where
 import Data.Char (isSpace, isDigit, digitToInt)
 \end{code}
-First let's define some operators that our parser will recognize.
-\begin{code}
-sPlus = '+'
-sMinus = '-'
-sMult  = '*'
-sDiv   = '/'
-sMod   = '%'
-sNegate= '~'
-sFact  = '!'
-\end{code}
-A \emph{parser} is a function that breaks a string into components called \emph{tokens}.
-\begin{code}
-type Parser = String -> [(Token,String)]
-\end{code}
-Typically, a function of type @Parser@ will examine its given String argument looking for a specific token. If the token is found, it will be returned in a list, along with the part of the string that remains to be parsed. If the token is not present, an empty list is returned. 
-The token that can be parsed in a prefix expression is one of:
+
+Evaluating a prefix expression requires two steps:
+\begin{itemize}
+\item parsing the expression into \emph{tokens},
+\item evaluating these tokens according to the rules of the prefix notation.
+\end{itemize}
+
+\section{Tokens, and how to evaluate them}
+
+Let's define the possible tokens for our prefix notation. A token can be:
 \begin{itemize}
 \item A number,
-\item An operator representing an unary function, followed by its operand,
-\item A operator representing a binary function, followed by its two parameters. 
+\item An operator representing an unary function (e.g. factorial)
+\item An operator representing a binary function (e.g. multiplication)
 \end{itemize}
-Each operand can be in turn, a full prefix expression. 
-For instance, the expression @*+ 42 17 !5@ can be parsed into the @PrefExp@ value: \\
-@ Op2 (*)@\\
-@   (Op2 (+)@\\
-@      (Num 42)@ \\
-@      (Num 17))@\\
-@   (Op1@ (!)\\
-@      (Num 5))@\\
 
-Since functions cannot be shown (try to enter @(+)@ at the \emph{ghci} prompt to see why), we put additional information in the definition of @PrefExp@ values so that showing them make sense.
 \begin{code}
 type Number = Integer
-type Token = PrefExp
-type Symbol = Char
-data PrefExp = Num Number
-             | Op1 Symbol (Number -> Number) PrefExp 
-             | Op2 Symbol (Number -> Number -> Number) PrefExp PrefExp
+data Token = Num Number
+           | Op1 (Number -> Number) 
+           | Op2 (Number -> Number -> Number)
 \end{code}
-To make values of the type @PrefExp@ visible (in ghci for example), we define its show function:
+Since an unary operator should be followed by another expression, and a binary operator by two expressions, it is natural to represent a parsed expressionas as a list of tokens.
+For example parsing the expression \verb|*+42 17!5| should result in the following list:
 \begin{code}
-instance Show PrefExp where
-    show (Num n) = show n
-    show (Op1 c _ prefExp) = (c : " ") ++ show prefExp 
-    show (Op2 c _ prefExp1 prefExp2) = 
-        (c :" ") ++ show prefExp1 ++ " " ++ show prefExp2
+example = [Op2 (*) ,Op2 (+) ,Num 42 ,Num 17 ,Op1 (\n->product[1..n]) ,Num 5]
 \end{code}
-
-Our first parser should recognize a digit, convert that value from @Int@ and return the @Num@ token.
+To evaluate a list of tokens representing a prefix expression, we need to examine the token at the head of the list. If this token matches the pattern \verb|Num n|, then the value is $n$ and the rest of the list is to be evaluated further.\\
+If the head of the list matches an unary operator, \verb|Op1 f|, we have to apply the function $f$ to the value represented by the rest of the list. \\
+If the head of the list matches a binary operator, \verb|Op2 f|, then we have to first evaluate the rest of the list, which will give us the first operand value $n$ and a remainging list, and then the evaluation amounts to evaluating a list starting with the (unary) partial application $f n$ to the value given by the rest of the list. \\
+Finally, evaluating an empty list should yield the (arbitrary) value $0$, and an empty list.
 \begin{code}
-digit :: Parser
-digit (c:s) | isDigit c = [(digitToNum c, s)]
-    where digitToNum = Num . fromIntegral . digitToInt
-digit _ = []
-
+eval :: [Token] -> (Number,[Token])
+eval [] = (0, [])
+eval (Num n:ts) = (n, ts)
+eval (Op1 f:ts) = (f n,ts') where (n,ts') = eval ts
+eval (Op2 f:ts) = eval (Op1 (f n):ts') where (n,ts') = eval ts
 \end{code}
-Another parser converts all successive digits into a @Num@ value.\\
-\begin{tabular}{rl}
-$0$ & 4807 \\
-$0\times{10}+4$               & 807 \\
-$(0\times{10}+4)\times{10}+8$ & 07 \\
-$((0\times{10}+4)\times{10}+8)$ & 07 \\
-$(((0\times{10}+4)\times{10}+8)\times{10}+0)$ & 7 \\
-$((((0\times{10}+4)\times{10}+8)\times{10}+0)\times{10}+7)$ &  \\
-\end{tabular}
-
+Thus the expression \verb|fst (eval example)| should yield $7080$.\\
+Here's how the expression \verb|eval [Op2 (+),Num 42, Num 17]| is evaluated:\\
+\begin{verbatim}
+eval [Op2 (+),Num 42, Num 17]
+eval (Op1 ((+) n):ts') where (n,ts') = eval [Num 42,Num 17]
+eval (Op1 ((+) n):ts') where (n,ts') = (42, [Num 17])
+eval (Op1 ((+) 42):[Num 17]) 
+((+) 42 n,ts') where (n,ts') = eval [Num 17]
+((+) 42 n,ts') where (n,ts') = (17,[])
+((+) 42 17,[]) 
+(59,[])
+\end{verbatim}
+\section{Parsing a prefix expression}
+A parser is a function that scans a string and recognizes a token, or a given pattern. Since there can be several possibilities, (for example, the sequence starting with $+42-17\dots$ could denote the addition of $42$ and $(-17)$ followed by something we can't recognize yet, or the expression $42+(17-\dots)$), the result should consist in a list of possible result, each result including the token found and the part of the string that remains to be parsed.
 \begin{code}
-accum :: Integer -> Parser
-accum acc s = case digit s of
-    [] -> [(Num acc, s)]
-    [(Num d,s')] -> accum (acc * 10 + d) s'
+type Parser a = String -> [(a,String)]
+
 \end{code}
-To parse a number, ignore spaces, then if one digit is found, accumulate all the following digits into a number. Otherwise if no digit was found, yield the empty result.
+Let's also define some operators that our parser will recognize.
 \begin{code}
-number :: Parser
-number (c:s) | isSpace c = number s
-number (c:s) | isDigit c = accum 0 (c:s)
-number _ = []
+[sAdd,sSub,sMul,sDiv,sMod,sNeg,sFac] = "+-*/%~!"
 \end{code}
-A parser for negation should recognize the symbol @`~`@ and yield an unary operator token with the matching function. The same should be done for the symbol @'!'@ and the factorial operation. This can be generalized into a parser for any unary operator.
-\begin{code}
-unaryOp :: Symbol -> (Number -> Number) -> Parser
-unaryOp op f (c:s) | c == op = [(Op1 op f, s)]
-unaryOp _ _ _ = []
-
-negation :: Parser
-negation = unaryOp '~' negate
-
-factorial :: Parser
-factorial = unaryOp '!' (\n -> product [1..n])
-\end{code}
-We can combine two parsers in a way such that one or the other token can be recognized.
-\begin{code}
-infix 2 <|>
-
-(<|>) :: Parser -> Parser -> Parser
-parserA <|> parserB = \s -> let result = parserA s in case result of
-    [] -> parserB s
-    _  -> result
-    
-
-\end{code}
-
 \end{document}
