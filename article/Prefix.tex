@@ -293,7 +293,7 @@
 Let's write a parser for expressions in prefix notation. Here are examples:\\
 
 \text{\ttfamily \char42{}\char43{}42~17\char33{}5~} \tab $\rightarrow \tab (42+17)\times!5$ \\
-\text{\ttfamily \char43{}4\char45{}3~\char43{}10\char126{}5} \tab $\rightarrow \tab (4+3-(10+(-5)))$ \\
+\text{\ttfamily \char43{}4\char45{}3~\char43{}10\char45{}5} \tab $\rightarrow \tab (4+3-(10+(-5)))$ \\
 
 We will need built-in functions to detect a space or a digit character, so let's import these. 
 \begin{hscode}\SaveRestoreHook
@@ -376,18 +376,41 @@ Here's how the expression \text{\ttfamily eval~\char91{}Op2~\char40{}\char43{}\c
 \ttfamily ~\char40{}59\char44{}\char91{}\char93{}\char41{}
 \end{tabbing}
 \section{Parsing a prefix expression}
-A parser is a function that scans a string and recognizes a token, or a given pattern. Since there can be several possibilities, (for example, the sequence starting with $+42-17\dots$ could denote the addition of $42$ and $(-17)$ followed by something we can't recognize yet, or the expression $42+(17-\dots)$), the result should consist in a list of possible result, each result including the token found and the part of the string that remains to be parsed.
+A parser is a function that scans a string and recognizes a token, or a sequence of tokens, or just anything else.
 \begin{hscode}\SaveRestoreHook
 \column{B}{@{}>{\hspre}l<{\hspost}@{}}%
 \column{E}{@{}>{\hspre}l<{\hspost}@{}}%
-\>[B]{}\mathbf{type}\;\Conid{Parser}\;\Varid{a}\mathrel{=}\Conid{String}\to [\mskip1.5mu (\Varid{a},\Conid{String})\mskip1.5mu]{}\<[E]%
+\>[B]{}\mathbf{newtype}\;\Conid{Parser}\;\Varid{a}\mathrel{=}\Conid{Parser}\;\{\mskip1.5mu \Varid{parse}\mathbin{::}\Conid{String}\to [\mskip1.5mu (\Varid{a},\Conid{String})\mskip1.5mu]\mskip1.5mu\}{}\<[E]%
 \ColumnHook
 \end{hscode}\resethooks
-Let's also define some operators that our parser will recognize.
+We can parse a digit, converting it to its number value:
 \begin{hscode}\SaveRestoreHook
 \column{B}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{5}{@{}>{\hspre}l<{\hspost}@{}}%
 \column{E}{@{}>{\hspre}l<{\hspost}@{}}%
-\>[B]{}[\mskip1.5mu \Varid{sAdd},\Varid{sSub},\Varid{sMul},\Varid{sDiv},\Varid{sMod},\Varid{sNeg},\Varid{sFac}\mskip1.5mu]\mathrel{=}\text{\ttfamily \char34 +-*/\%\char126 !\char34}{}\<[E]%
+\>[B]{}\Varid{digit}\mathbin{::}\Conid{Parser}\;\Conid{Number}{}\<[E]%
+\\
+\>[B]{}\Varid{digit}\;[\mskip1.5mu \mskip1.5mu]\mathrel{=}[\mskip1.5mu \mskip1.5mu]{}\<[E]%
+\\
+\>[B]{}\Varid{digit}\;(\Varid{c}\mathbin{:}\Varid{cs})\mid \Varid{isDigit}\;\Varid{c}\mathrel{=}[\mskip1.5mu (\Varid{toNumber}\;\Varid{c},\Varid{cs})\mskip1.5mu]{}\<[E]%
+\\
+\>[B]{}\hsindent{5}{}\<[5]%
+\>[5]{}\mathbf{where}{}\<[E]%
+\\
+\>[B]{}\hsindent{5}{}\<[5]%
+\>[5]{}\Varid{toNumber}\mathrel{=}\Varid{fromIntegral}\mathbin{\circ}\Varid{digitToInt}{}\<[E]%
+\ColumnHook
+\end{hscode}\resethooks
+If we define the class of our parser as a monad, we can then chain effects on the result of a parser:
+
+\begin{hscode}\SaveRestoreHook
+\column{B}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{5}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{E}{@{}>{\hspre}l<{\hspost}@{}}%
+\>[B]{}\mathbf{instance}\;\Conid{Monad}\;\Conid{Parser}\;\mathbf{where}{}\<[E]%
+\\
+\>[B]{}\hsindent{5}{}\<[5]%
+\>[5]{}\Varid{m}\bind \Varid{k}\mathrel{=}\Conid{Parser}\mathbin{\$}\lambda \Varid{s}\to [\mskip1.5mu (\Varid{y},\Varid{s''})\mid (\Varid{x},\Varid{s'})\leftarrow \Varid{parse}\;\Varid{m}\;\Varid{s},(\Varid{y},\Varid{s''})\leftarrow \Varid{parse}\;(\Varid{k}\;\Varid{x},\Varid{s'})\mskip1.5mu]{}\<[E]%
 \ColumnHook
 \end{hscode}\resethooks
 \end{document}

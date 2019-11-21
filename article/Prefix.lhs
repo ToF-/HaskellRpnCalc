@@ -94,13 +94,27 @@ eval (Op1 ((+) 42):[Num 17])
 (59,[])
 \end{verbatim}
 \section{Parsing a prefix expression}
-A parser is a function that scans a string and recognizes a token, or a given pattern. Since there can be several possibilities, (for example, the sequence starting with $+42-17\dots$ could denote the addition of $42$ and $(-17)$ followed by something we can't recognize yet, or the expression $42+(17-\dots)$), the result should consist in a list of possible result, each result including the token found and the part of the string that remains to be parsed.
+A parser is a function that scans a string and recognizes a token, or a sequence of tokens, or just anything else.
 \begin{code}
-type Parser a = String -> [(a,String)]
-
+newtype Parser a = Parser { parse :: String -> [(a,String)] }
 \end{code}
-Let's also define some operators that our parser will recognize.
+We can parse a digit, converting it to its number value:
 \begin{code}
-[sAdd,sSub,sMul,sDiv,sMod,sNeg,sFac] = "+-*/%~!"
+digit :: Parser Number
+digit = Parser $ \s -> case s of
+    [] -> []
+    (c:cs) | isDigit c -> [(toNumber c,cs)]
+           | otherwise -> []
+    where
+    toNumber = fromIntegral . digitToInt
+\end{code}
+If we define the class of our parser as a monad, we can then chain effects on the result of a parser:
+
+\begin{code}
+instance Functor Parser where
+    fmap f p = Parser $ \s -> [(f x,s') | (x,s') <- parse p s]
+instance Applicative Parser
+instance Monad Parser where
+    m >>= k = Parser $ \s -> [(y,s'') | (x,s') <- parse m s, (y,s'') <- parse (k x) s'] 
 \end{code}
 \end{document}
