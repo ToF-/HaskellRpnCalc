@@ -1,5 +1,6 @@
 \documentclass[a4paper,10pt]{article}
 \usepackage{longtable,geometry}
+\usepackage{tabularx}
 \usepackage[english]{babel}
 \usepackage[latin1]{inputenc}
 \usepackage[babel]{csquotes}
@@ -32,31 +33,37 @@
 \newcommand\tab[1][1cm]{\hspace*{#1}}
 \begin{document}
 \setlength{\parindent}{0em}
-Let's write a parser for expressions in prefix notation. Here are examples:\\
+\section{Let's write a program...}
+Let's write a program that reads expressions in prefix notation, and writes their value as an output. Here are examples of such expressions:\\
 
-\verb|*+42 17!5 | \tab $\rightarrow \tab (42+17)\times!5$ \\
-\verb|+4-3 +10~5| \tab $\rightarrow \tab (4+3-(10+(-5)))$ \\
+\begin{center}
+\begin{tabular}{c c c}
+\emph{prefix expression} & \emph{value} & \emph{infix equivalent}\\
+\hline 
+\hline
+\verb|*+42 17!5 | & $7080$ & $(42+17)\times!5$ \\
+\verb|+4-3 +10-5| & $2$ & $(4+3-(10+(-5)))$ \\
+\hline
+\end{tabular}\\
+\end{center}
+Note how the \verb|-| symbol can be interpreted as the minus sign or the subtraction operator.
 
-We will need built-in functions to detect a space or a digit character, so let's import these. 
 \begin{code}
 module Prefix
 where
-import Data.Char (isSpace, isDigit, digitToInt)
 \end{code}
+Evaluating a prefix expression is easy because there is no surprise: the first element of any expression -- or sub expression -- always dictates how the rest of the expression should be interpreted. For instance in the expression $*+42\, 17\,!5$, from reading the $*$ symbol we know that we should find two operands in the rest of the expression. The first operand starts with the $+$ symbol, which indicates another binary operation, and so on. 
 
-Evaluating a prefix expression requires two steps:
-\begin{itemize}
-\item parsing the expression into \emph{tokens},
-\item evaluating these tokens according to the rules of the prefix notation.
-\end{itemize}
+Thus if we can determine each element of the expression and collect them into a list of \emph{tokens}, evaluating such a sequence is straightforward. Recognizing each token in the expression, will be done by a parser function. 
 
 \section{Tokens, and how to evaluate them}
 
-Let's define the possible tokens for our prefix notation. A token can be:
+Let's start with the easiest part: defining the possible tokens that form a prefix expression, and evaluating a list of such tokens. 
+A token can be:
 \begin{itemize}
 \item A number,
-\item An operator representing an unary function (e.g. factorial)
-\item An operator representing a binary function (e.g. multiplication)
+\item An operator for an unary function (e.g. factorial)
+\item An operator for a binary function (e.g. multiplication)
 \end{itemize}
 
 \begin{code}
@@ -65,7 +72,7 @@ data Token = Num Number
            | Op1 (Number -> Number) 
            | Op2 (Number -> Number -> Number)
 \end{code}
-Since an unary operator should be followed by another expression, and a binary operator by two expressions, it is natural to represent a parsed expressionas as a list of tokens.
+Since an unary operator should be followed by another expression, and a binary operator by two expressions, it is natural to represent a parsed expression as a list of tokens.
 For example parsing the expression \verb|*+42 17!5| should result in the following list:
 \begin{code}
 example = [Op2 (*) ,Op2 (+) ,Num 42 ,Num 17 ,Op1 (\n->product[1..n]) ,Num 5]
@@ -108,7 +115,7 @@ num s = case reads s of
 \end{code}
 Let's also define some operators that our parsers will recognize.
 \begin{code}
-[sAdd,sSub,sMul,sDiv,sMod,sNeg,sFac] = "+-*/%~!"
+[sAdd,sSub,sMul,sDiv,sMod,sNeg,sFac] = "+-*/%-!"
 \end{code}
 To parse an unary operator, we need to recognize one of the symbols for such operators:
 \begin{code}
