@@ -293,7 +293,7 @@
 Let's write a parser for expressions in prefix notation. Here are examples:\\
 
 \text{\ttfamily \char42{}\char43{}42~17\char33{}5~} \tab $\rightarrow \tab (42+17)\times!5$ \\
-\text{\ttfamily \char43{}4\char45{}3~\char43{}10\char126{}5} \tab $\rightarrow \tab (4+3-(10+(-5)))$ \\
+\text{\ttfamily \char43{}4\char45{}3~\char43{}10\char45{}5} \tab $\rightarrow \tab (4+3-(10+(-5)))$ \\
 
 We will need built-in functions to detect a space or a digit character, so let's import these. 
 \begin{hscode}\SaveRestoreHook
@@ -348,13 +348,13 @@ For example parsing the expression \text{\ttfamily \char42{}\char43{}42~17\char3
 To evaluate a list of tokens representing a prefix expression, we need to examine the token at the head of the list. If this token matches the pattern \text{\ttfamily Num~n}, then the value is $n$ and the rest of the list is to be evaluated further.\\
 If the head of the list matches an unary operator, \text{\ttfamily Op1~f}, we have to apply the function $f$ to the value represented by the rest of the list. \\
 If the head of the list matches a binary operator, \text{\ttfamily Op2~f}, then we have to first evaluate the rest of the list, which will give us the first operand value $n$ and a remainging list, and then the evaluation amounts to evaluating a list starting with the (unary) partial application $f n$ to the value given by the rest of the list. \\
-Finally, evaluating an empty list should yield the (arbitrary) value $0$, and an empty list.
+Finally, evaluating an empty list should never happen (since it means that the input couldn't be parsed in a list of tokens).
 \begin{hscode}\SaveRestoreHook
 \column{B}{@{}>{\hspre}l<{\hspost}@{}}%
 \column{E}{@{}>{\hspre}l<{\hspost}@{}}%
 \>[B]{}\Varid{eval}\mathbin{::}[\mskip1.5mu \Conid{Token}\mskip1.5mu]\to (\Conid{Number},[\mskip1.5mu \Conid{Token}\mskip1.5mu]){}\<[E]%
 \\
-\>[B]{}\Varid{eval}\;[\mskip1.5mu \mskip1.5mu]\mathrel{=}(\mathrm{0},[\mskip1.5mu \mskip1.5mu]){}\<[E]%
+\>[B]{}\Varid{eval}\;[\mskip1.5mu \mskip1.5mu]\mathrel{=}\Varid{error}\;\text{\ttfamily \char34 empty~token~list~given~to~eval\char34}{}\<[E]%
 \\
 \>[B]{}\Varid{eval}\;(\Conid{Num}\;\Varid{n}\mathbin{:}\Varid{ts})\mathrel{=}(\Varid{n},\Varid{ts}){}\<[E]%
 \\
@@ -376,18 +376,184 @@ Here's how the expression \text{\ttfamily eval~\char91{}Op2~\char40{}\char43{}\c
 \ttfamily ~\char40{}59\char44{}\char91{}\char93{}\char41{}
 \end{tabbing}
 \section{Parsing a prefix expression}
-A parser is a function that scans a string and recognizes a token, or a given pattern. Since there can be several possibilities, (for example, the sequence starting with $+42-17\dots$ could denote the addition of $42$ and $(-17)$ followed by something we can't recognize yet, or the expression $42+(17-\dots)$), the result should consist in a list of possible result, each result including the token found and the part of the string that remains to be parsed.
+A parser is a function that scans a string and recognizes a token, or a given pattern. The result of the parsing is a list of tuples \text{\ttfamily \char40{}a\char44{}String\char41{}}, since there can be several distinct results from parsing a string.
 \begin{hscode}\SaveRestoreHook
 \column{B}{@{}>{\hspre}l<{\hspost}@{}}%
 \column{E}{@{}>{\hspre}l<{\hspost}@{}}%
 \>[B]{}\mathbf{type}\;\Conid{Parser}\;\Varid{a}\mathrel{=}\Conid{String}\to [\mskip1.5mu (\Varid{a},\Conid{String})\mskip1.5mu]{}\<[E]%
 \ColumnHook
 \end{hscode}\resethooks
-Let's also define some operators that our parser will recognize.
+Let's first parse numbers, using the \text{\ttfamily reads} parser already present in Haskell prelude. We must avoid parsing negative numbers, because in our notation, the minus sign denotes a subtraction, and we use the \text{\ttfamily \char126{}} operator to negate a number.
+\begin{hscode}\SaveRestoreHook
+\column{B}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{5}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{13}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{E}{@{}>{\hspre}l<{\hspost}@{}}%
+\>[B]{}\Varid{num}\mathbin{::}\Conid{Parser}\;\Conid{Token}{}\<[E]%
+\\
+\>[B]{}\Varid{num}\;\Varid{s}\mathrel{=}\mathbf{case}\;\Varid{reads}\;\Varid{s}\;\mathbf{of}{}\<[E]%
+\\
+\>[B]{}\hsindent{5}{}\<[5]%
+\>[5]{}[\mskip1.5mu \mskip1.5mu]\to [\mskip1.5mu \mskip1.5mu]{}\<[E]%
+\\
+\>[B]{}\hsindent{5}{}\<[5]%
+\>[5]{}[\mskip1.5mu (\Varid{n},\Varid{s})\mskip1.5mu]\mid \Varid{n}\geq \mathrm{0}\to [\mskip1.5mu (\Conid{Num}\;\Varid{n},\Varid{s})\mskip1.5mu]{}\<[E]%
+\\
+\>[5]{}\hsindent{8}{}\<[13]%
+\>[13]{}\mid \Varid{otherwise}\to [\mskip1.5mu \mskip1.5mu]{}\<[E]%
+\ColumnHook
+\end{hscode}\resethooks
+Let's also define some operators that our parsers will recognize.
 \begin{hscode}\SaveRestoreHook
 \column{B}{@{}>{\hspre}l<{\hspost}@{}}%
 \column{E}{@{}>{\hspre}l<{\hspost}@{}}%
 \>[B]{}[\mskip1.5mu \Varid{sAdd},\Varid{sSub},\Varid{sMul},\Varid{sDiv},\Varid{sMod},\Varid{sNeg},\Varid{sFac}\mskip1.5mu]\mathrel{=}\text{\ttfamily \char34 +-*/\%\char126 !\char34}{}\<[E]%
+\ColumnHook
+\end{hscode}\resethooks
+To parse an unary operator, we need to recognize one of the symbols for such operators:
+\begin{hscode}\SaveRestoreHook
+\column{B}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{E}{@{}>{\hspre}l<{\hspost}@{}}%
+\>[B]{}\Varid{unaryOp}\mathbin{::}\Conid{Parser}\;\Conid{Token}{}\<[E]%
+\\
+\>[B]{}\Varid{unaryOp}\;(\Varid{c}\mathbin{:}\Varid{s})\mid \Varid{c}\equiv \Varid{sNeg}\mathrel{=}[\mskip1.5mu (\Conid{Op1}\;\Varid{negate},\Varid{s})\mskip1.5mu]{}\<[E]%
+\\
+\>[B]{}\Varid{unaryOp}\;(\Varid{c}\mathbin{:}\Varid{s})\mid \Varid{c}\equiv \Varid{sFac}\mathrel{=}[\mskip1.5mu (\Conid{Op1}\;(\lambda \Varid{n}\to \Varid{product}\;[\mskip1.5mu \mathrm{1}\mathinner{\ldotp\ldotp}\Varid{n}\mskip1.5mu]),\Varid{s})\mskip1.5mu]{}\<[E]%
+\\
+\>[B]{}\Varid{unaryOp}\;\anonymous \mathrel{=}[\mskip1.5mu \mskip1.5mu]{}\<[E]%
+\ColumnHook
+\end{hscode}\resethooks
+The same logic applies to binary operators:
+\begin{hscode}\SaveRestoreHook
+\column{B}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{E}{@{}>{\hspre}l<{\hspost}@{}}%
+\>[B]{}\Varid{binaryOp}\mathbin{::}\Conid{Parser}\;\Conid{Token}{}\<[E]%
+\\
+\>[B]{}\Varid{binaryOp}\;(\Varid{c}\mathbin{:}\Varid{s})\mid \Varid{c}\equiv \Varid{sAdd}\mathrel{=}[\mskip1.5mu (\Conid{Op2}\;(\mathbin{+}),\Varid{s})\mskip1.5mu]{}\<[E]%
+\\
+\>[B]{}\Varid{binaryOp}\;(\Varid{c}\mathbin{:}\Varid{s})\mid \Varid{c}\equiv \Varid{sSub}\mathrel{=}[\mskip1.5mu (\Conid{Op2}\;(\mathbin{-}),\Varid{s})\mskip1.5mu]{}\<[E]%
+\\
+\>[B]{}\Varid{binaryOp}\;(\Varid{c}\mathbin{:}\Varid{s})\mid \Varid{c}\equiv \Varid{sMul}\mathrel{=}[\mskip1.5mu (\Conid{Op2}\;(\mathbin{*}),\Varid{s})\mskip1.5mu]{}\<[E]%
+\\
+\>[B]{}\Varid{binaryOp}\;(\Varid{c}\mathbin{:}\Varid{s})\mid \Varid{c}\equiv \Varid{sDiv}\mathrel{=}[\mskip1.5mu (\Conid{Op2}\;\Varid{div},\Varid{s})\mskip1.5mu]{}\<[E]%
+\\
+\>[B]{}\Varid{binaryOp}\;(\Varid{c}\mathbin{:}\Varid{s})\mid \Varid{c}\equiv \Varid{sMod}\mathrel{=}[\mskip1.5mu (\Conid{Op2}\;\Varid{mod},\Varid{s})\mskip1.5mu]{}\<[E]%
+\\
+\>[B]{}\Varid{binaryOp}\;\anonymous \mathrel{=}[\mskip1.5mu \mskip1.5mu]{}\<[E]%
+\ColumnHook
+\end{hscode}\resethooks
+Since spaces can separate numbers from operators, we need a function to augment our parsers so that they consume spaces before recognizing tokens.
+\begin{hscode}\SaveRestoreHook
+\column{B}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{E}{@{}>{\hspre}l<{\hspost}@{}}%
+\>[B]{}\Varid{spaces}\mathbin{::}\Conid{Parser}\;\Varid{a}\to \Conid{Parser}\;\Varid{a}{}\<[E]%
+\\
+\>[B]{}\Varid{spaces}\;\Varid{p}\;(\text{\ttfamily '~'}\mathbin{:}\Varid{s})\mathrel{=}\Varid{spaces}\;\Varid{p}\;\Varid{s}{}\<[E]%
+\\
+\>[B]{}\Varid{spaces}\;\Varid{p}\;\Varid{s}\mathrel{=}\Varid{p}\;\Varid{s}{}\<[E]%
+\ColumnHook
+\end{hscode}\resethooks
+Since expressions are formed with lists of tokens, we need a function that will use our basic parsers and put their result into a list.
+\begin{hscode}\SaveRestoreHook
+\column{B}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{8}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{E}{@{}>{\hspre}l<{\hspost}@{}}%
+\>[B]{}\Varid{list}\mathbin{::}\Conid{Parser}\;\Varid{a}\to \Conid{Parser}\;[\mskip1.5mu \Varid{a}\mskip1.5mu]{}\<[E]%
+\\
+\>[B]{}\Varid{list}\;\Varid{p}\mathrel{=}\Varid{map}\;(\lambda (\Varid{a},\Varid{s})\to ([\mskip1.5mu \Varid{a}\mskip1.5mu],\Varid{s}))\mathbin{\circ}\Varid{p}{}\<[E]%
+\\[\blanklineskip]%
+\>[B]{}\Varid{number}\mathrel{=}\Varid{list}\;(\Varid{spaces}\;\Varid{num}){}\<[E]%
+\\
+\>[B]{}\Varid{unary}{}\<[8]%
+\>[8]{}\mathrel{=}\Varid{list}\;(\Varid{spaces}\;\Varid{unaryOp}){}\<[E]%
+\\
+\>[B]{}\Varid{binary}\mathrel{=}\Varid{list}\;(\Varid{spaces}\;\Varid{binaryOp}){}\<[E]%
+\ColumnHook
+\end{hscode}\resethooks
+
+We should be able to recognize a sequence of different tokens, so let's write a parser that is defined by the sequence of two parsers:
+\begin{hscode}\SaveRestoreHook
+\column{B}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{5}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{11}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{E}{@{}>{\hspre}l<{\hspost}@{}}%
+\>[B]{}\Varid{seqP}\mathbin{::}\Conid{Parser}\;[\mskip1.5mu \Varid{a}\mskip1.5mu]\to \Conid{Parser}\;[\mskip1.5mu \Varid{a}\mskip1.5mu]\to \Conid{Parser}\;[\mskip1.5mu \Varid{a}\mskip1.5mu]{}\<[E]%
+\\
+\>[B]{}\Varid{seqP}\;\Varid{parserA}\;\Varid{parserB}\;\Varid{s}\mathrel{=}\mathbf{case}\;\Varid{parserA}\;\Varid{s}\;\mathbf{of}{}\<[E]%
+\\
+\>[B]{}\hsindent{5}{}\<[5]%
+\>[5]{}[\mskip1.5mu \mskip1.5mu]\to [\mskip1.5mu \mskip1.5mu]{}\<[E]%
+\\
+\>[B]{}\hsindent{5}{}\<[5]%
+\>[5]{}\Varid{rs}\to [\mskip1.5mu (\Varid{a}\plus \Varid{b},\Varid{u}){}\<[E]%
+\\
+\>[5]{}\hsindent{6}{}\<[11]%
+\>[11]{}\mid (\Varid{a},\Varid{t})\leftarrow \Varid{rs}{}\<[E]%
+\\
+\>[5]{}\hsindent{6}{}\<[11]%
+\>[11]{},(\Varid{b},\Varid{u})\leftarrow \Varid{parserB}\;\Varid{t}\mskip1.5mu]{}\<[E]%
+\ColumnHook
+\end{hscode}\resethooks
+We also want to combine two parsers so that one or the other succeeds, so let's write a parser that is defined by the alternative of two parsers.
+\begin{hscode}\SaveRestoreHook
+\column{B}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{5}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{E}{@{}>{\hspre}l<{\hspost}@{}}%
+\>[B]{}\Varid{altP}\mathbin{::}\Conid{Parser}\;[\mskip1.5mu \Varid{a}\mskip1.5mu]\to \Conid{Parser}\;[\mskip1.5mu \Varid{a}\mskip1.5mu]\to \Conid{Parser}\;[\mskip1.5mu \Varid{a}\mskip1.5mu]{}\<[E]%
+\\
+\>[B]{}\Varid{altP}\;\Varid{parserA}\;\Varid{parserB}\;\Varid{s}\mathrel{=}\mathbf{case}\;\Varid{parserA}\;\Varid{s}\;\mathbf{of}{}\<[E]%
+\\
+\>[B]{}\hsindent{5}{}\<[5]%
+\>[5]{}[\mskip1.5mu \mskip1.5mu]\to \Varid{parserB}\;\Varid{s}{}\<[E]%
+\\
+\>[B]{}\hsindent{5}{}\<[5]%
+\>[5]{}\Varid{rs}\to \Varid{rs}{}\<[E]%
+\ColumnHook
+\end{hscode}\resethooks
+Defining operators for these function will make the code more expressive.
+\begin{hscode}\SaveRestoreHook
+\column{B}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{E}{@{}>{\hspre}l<{\hspost}@{}}%
+\>[B]{}\mathbf{infixl}\;\mathrm{2}\mathbin{<|>}{}\<[E]%
+\\
+\>[B]{}\mathbf{infixl}\;\mathrm{3}\mathbin{<.>}{}\<[E]%
+\\[\blanklineskip]%
+\>[B]{}(\mathbin{<|>})\mathrel{=}\Varid{altP}{}\<[E]%
+\\
+\>[B]{}(\mathbin{<.>})\mathrel{=}\Varid{seqP}{}\<[E]%
+\ColumnHook
+\end{hscode}\resethooks
+Now we can define a parser for prefix expressions:
+\begin{hscode}\SaveRestoreHook
+\column{B}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{11}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{E}{@{}>{\hspre}l<{\hspost}@{}}%
+\>[B]{}\Varid{expression}\mathbin{::}\Conid{Parser}\;[\mskip1.5mu \Conid{Token}\mskip1.5mu]{}\<[E]%
+\\
+\>[B]{}\Varid{expression}\mathrel{=}\Varid{number}{}\<[E]%
+\\
+\>[B]{}\hsindent{11}{}\<[11]%
+\>[11]{}\mathbin{<|>}\Varid{binary}\mathbin{<.>}\Varid{expression}\mathbin{<.>}\Varid{expression}{}\<[E]%
+\\
+\>[B]{}\hsindent{11}{}\<[11]%
+\>[11]{}\mathbin{<|>}\Varid{unary}\mathbin{<.>}\Varid{expression}{}\<[E]%
+\ColumnHook
+\end{hscode}\resethooks
+
+Now we can define the main function to evaluate a prefix expression. If the expression has correctly been parsed, we evaluate the first list of tokens, and extract the number from the result.
+\begin{hscode}\SaveRestoreHook
+\column{B}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{5}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{E}{@{}>{\hspre}l<{\hspost}@{}}%
+\>[B]{}\Varid{prefix}\mathbin{::}\Conid{String}\to \Conid{Number}{}\<[E]%
+\\
+\>[B]{}\Varid{prefix}\;\Varid{s}\mathrel{=}\mathbf{case}\;\Varid{expression}\;\Varid{s}\;\mathbf{of}{}\<[E]%
+\\
+\>[B]{}\hsindent{5}{}\<[5]%
+\>[5]{}[\mskip1.5mu \mskip1.5mu]\to \Varid{error}\;\text{\ttfamily \char34 incorrect~prefix~expression\char34}{}\<[E]%
+\\
+\>[B]{}\hsindent{5}{}\<[5]%
+\>[5]{}((\Varid{ts},\anonymous )\mathbin{:\char95 })\to \Varid{fst}\;(\Varid{eval}\;\Varid{ts}){}\<[E]%
 \ColumnHook
 \end{hscode}\resethooks
 \end{document}
