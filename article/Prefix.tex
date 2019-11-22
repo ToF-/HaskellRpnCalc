@@ -293,7 +293,7 @@
 Let's write a parser for expressions in prefix notation. Here are examples:\\
 
 \text{\ttfamily \char42{}\char43{}42~17\char33{}5~} \tab $\rightarrow \tab (42+17)\times!5$ \\
-\text{\ttfamily \char43{}4\char45{}3~\char43{}10\char45{}5} \tab $\rightarrow \tab (4+3-(10+(-5)))$ \\
+\text{\ttfamily \char43{}4\char45{}3~\char43{}10\char126{}5} \tab $\rightarrow \tab (4+3-(10+(-5)))$ \\
 
 We will need built-in functions to detect a space or a digit character, so let's import these. 
 \begin{hscode}\SaveRestoreHook
@@ -556,4 +556,12 @@ Now we can define the main function to evaluate a prefix expression. If the expr
 \>[5]{}((\Varid{ts},\anonymous )\mathbin{:\char95 })\to \Varid{fst}\;(\Varid{eval}\;\Varid{ts}){}\<[E]%
 \ColumnHook
 \end{hscode}\resethooks
+Our main program consist in evaluating prefix expressions:
+\begin{hscode}\SaveRestoreHook
+\column{B}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{E}{@{}>{\hspre}l<{\hspost}@{}}%
+\>[B]{}\Varid{main}\mathrel{=}\Varid{interact}\mathbin{\$}\Varid{unlines}\mathbin{\circ}\Varid{map}\;(\Varid{show}\mathbin{\circ}\Varid{prefix})\mathbin{\circ}\Varid{lines}{}\<[E]%
+\ColumnHook
+\end{hscode}\resethooks
+
 \end{document}

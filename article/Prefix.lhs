@@ -35,7 +35,7 @@
 Let's write a parser for expressions in prefix notation. Here are examples:\\
 
 \verb|*+42 17!5 | \tab $\rightarrow \tab (42+17)\times!5$ \\
-\verb|+4-3 +10-5| \tab $\rightarrow \tab (4+3-(10+(-5)))$ \\
+\verb|+4-3 +10~5| \tab $\rightarrow \tab (4+3-(10+(-5)))$ \\
 
 We will need built-in functions to detect a space or a digit character, so let's import these. 
 \begin{code}
@@ -182,4 +182,9 @@ prefix s = case expression s of
     [] -> error "incorrect prefix expression"
     ((ts,_):_) -> fst (eval ts)
 \end{code}
+Our main program consist in evaluating prefix expressions:
+\begin{code}
+main = interact $ unlines . map (show . prefix) . lines
+\end{code}
+
 \end{document}
