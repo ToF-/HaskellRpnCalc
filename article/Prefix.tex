@@ -24,6 +24,7 @@
 \usepackage{bytefield}
 \usepackage{rotating}
 \usepackage{tikz}
+\usepackage[linguistics]{forest}
 \usepackage{wallpaper}
 
 %% ODER: format ==         = "\mathrel{==}"
@@ -314,14 +315,27 @@ Note how the \text{\ttfamily \char45{}} symbol can be interpreted as the minus s
 \>[B]{}\mathbf{where}{}\<[E]%
 \ColumnHook
 \end{hscode}\resethooks
-Evaluating a prefix expression is easy because there is no surprise: the first element of any expression -- or sub expression -- always dictates how the rest of the expression should be interpreted. For instance in the expression $*+42\, 17\,!5$, from reading the $*$ symbol we know that we should find two operands in the rest of the expression. The first operand starts with the $+$ symbol, which indicates another binary operation, and so on. 
+Evaluating a prefix expression is easy because there is no surprise: the first element of any expression -- or sub expression -- always dictates how the rest of the expression should be interpreted. For instance in the expression $*+42\, 17\,!5$, from reading the $*$ symbol we know that we should find two operands in the rest of the expression. The first operand starts with the $+$ symbol, which indicates another binary operation, and so on. \\
+Thus if we have determined each element of the expression and collected them into a list of \emph{tokens}, we can easily change that list into a tree, and then evaluate that tree. \\
+\begin{center}
+\begin{forest}
+    [$*$
+        [$+$
+            [$42$]
+            [$17$]
+        ]
+        [$!$
+            [$5$]
+        ]
+    ]
+\end{forest}
+\end{center}
+Thus if we can determine each element of the expression and collect them into a list of \emph{tokens}, evaluating such a sequence is straightforward. Recognizing each token in the expression, is a little more complicated and will be done by a parser function. \\
 
-Thus if we can determine each element of the expression and collect them into a list of \emph{tokens}, evaluating such a sequence is straightforward. Recognizing each token in the expression, will be done by a parser function. 
+Let's start with the easy part:
+\section{Evaluating a list of tokens}
 
-\section{Tokens, and how to evaluate them}
-
-Let's start with the easiest part: defining the possible tokens that form a prefix expression, and evaluating a list of such tokens. 
-A token can be:
+A token in a prefix expression that has been correctly parsed can be:
 \begin{itemize}
 \item A number,
 \item An operator for an unary function (e.g. factorial)
@@ -343,21 +357,32 @@ A token can be:
 \>[12]{}\mid \Conid{Op2}\;(\Conid{Number}\to \Conid{Number}\to \Conid{Number}){}\<[E]%
 \ColumnHook
 \end{hscode}\resethooks
-Since an unary operator should be followed by another expression, and a binary operator by two expressions, it is natural to represent a parsed expression as a list of tokens.
+For the sake of evaluation, expressions can be seen as list of tokens.
 For example parsing the expression \text{\ttfamily \char42{}\char43{}42~17\char33{}5} should result in the following list:
 \begin{hscode}\SaveRestoreHook
 \column{B}{@{}>{\hspre}l<{\hspost}@{}}%
 \column{E}{@{}>{\hspre}l<{\hspost}@{}}%
-\>[B]{}\Varid{example}\mathrel{=}[\mskip1.5mu \Conid{Op2}\;(\mathbin{*}),\Conid{Op2}\;(\mathbin{+}),\Conid{Num}\;\mathrm{42},\Conid{Num}\;\mathrm{17},\Conid{Op1}\;(\lambda \Varid{n}\to \Varid{product}\;[\mskip1.5mu \mathrm{1}\mathinner{\ldotp\ldotp}\Varid{n}\mskip1.5mu]),\Conid{Num}\;\mathrm{5}\mskip1.5mu]{}\<[E]%
+\>[B]{}\Varid{fact}\;\Varid{n}\mathrel{=}\Varid{product}\;[\mskip1.5mu \mathrm{1}\mathinner{\ldotp\ldotp}\Varid{n}\mskip1.5mu]{}\<[E]%
+\\
+\>[B]{}\Varid{example}\mathrel{=}[\mskip1.5mu \Conid{Op2}\;(\mathbin{*}),\Conid{Op2}\;(\mathbin{+}),\Conid{Num}\;\mathrm{42},\Conid{Num}\;\mathrm{17},\Conid{Op1}\;\Varid{fact},\Conid{Num}\;\mathrm{5}\mskip1.5mu]{}\<[E]%
 \ColumnHook
 \end{hscode}\resethooks
-To evaluate a list of tokens representing a prefix expression, we need to examine the token at the head of the list. If this token matches the pattern \text{\ttfamily Num~n}, then the value is $n$ and the rest of the list is to be evaluated further.\\
-If the head of the list matches an unary operator, \text{\ttfamily Op1~f}, we have to apply the function $f$ to the value represented by the rest of the list. \\
-If the head of the list matches a binary operator, \text{\ttfamily Op2~f}, then we have to first evaluate the rest of the list, which will give us the first operand value $n$ and a remainging list, and then the evaluation amounts to evaluating a list starting with the (unary) partial application $f n$ to the value given by the rest of the list. \\
-Finally, evaluating an empty list should never happen (since it means that the input couldn't be parsed in a list of tokens).
+To evaluate a list of tokens representing a prefix expression, we need to examine the token at the head of the list. \\
 \begin{hscode}\SaveRestoreHook
 \column{B}{@{}>{\hspre}l<{\hspost}@{}}%
 \column{E}{@{}>{\hspre}l<{\hspost}@{}}%
+\>[B]{}\Varid{eval}\mathbin{::}[\mskip1.5mu \Conid{Token}\mskip1.5mu]\to (\Conid{Number},{}\<[E]%
+\\
+\>[B]{}\Conid{If}\;\Varid{this}\;\Varid{token}\;\Varid{matches}\;\Varid{the}\;\Varid{pattern}\lambda \Varid{verb}\mid \Conid{Num}\;\Varid{n}\mid ,\mathbf{then}\;\Varid{the}\;\Varid{value}\;\Varid{is}\mathbin{\$}\Varid{n}\mathbin{\$}\Varid{and}\;\Varid{the}\;\Varid{rest}\;\mathbf{of}\;\Varid{the}\;\Varid{list}\;\Varid{is}\;\Varid{to}\;\Varid{be}\;\Varid{evaluated}\;\Varid{further}\mathbin{.\char92 \char92 }{}\<[E]%
+\\
+\>[B]{}\Conid{If}\;\Varid{the}\;\Varid{head}\;\mathbf{of}\;\Varid{the}\;\Varid{list}\;\Varid{matches}\;\Varid{an}\;\Varid{unary}\;\Varid{operator},\lambda \Varid{verb}\mid \Conid{Op1}\;\Varid{f}\mid ,\Varid{we}\;\Varid{have}\;\Varid{to}\;\Varid{apply}\;\Varid{the}\;\Varid{function}\mathbin{\$}\Varid{f}\mathbin{\$}\Varid{to}\;\Varid{the}\;\Varid{value}\;\Varid{represented}\;\Varid{by}\;\Varid{the}\;\Varid{rest}\;\mathbf{of}\;\Varid{the}\;\Varid{list}\mathbin{\circ}\mathbin{\char92 \char92 }{}\<[E]%
+\\
+\>[B]{}\Conid{If}\;\Varid{the}\;\Varid{head}\;\mathbf{of}\;\Varid{the}\;\Varid{list}\;\Varid{matches}\;\Varid{a}\;\Varid{binary}\;\Varid{operator},\lambda \Varid{verb}\mid \Conid{Op2}\;\Varid{f}\mid ,\mathbf{then}\;\Varid{we}\;\Varid{have}\;\Varid{to}\;\Varid{first}\;\Varid{evaluate}\;\Varid{the}\;\Varid{rest}\;\mathbf{of}\;\Varid{the}\;\Varid{list},\Varid{which}\;\Varid{will}\;\Varid{give}\;\Varid{us}\;\Varid{the}\;\Varid{first}\;\Varid{operand}\;\Varid{value}\mathbin{\$}\Varid{n}\mathbin{\$}\Varid{and}\;\Varid{a}\;\Varid{remainging}\;\Varid{list},\Varid{and}\;\mathbf{then}\;\Varid{the}\;\Varid{evaluation}\;\Varid{amounts}\;\Varid{to}\;\Varid{evaluating}\;\Varid{a}\;\Varid{list}\;\Varid{starting}\;\Varid{with}\;\Varid{the}\;(\Varid{unary})\;\Varid{partial}\;\Varid{application}\mathbin{\$}\Varid{f}\;\Varid{n}\mathbin{\$}\Varid{to}\;\Varid{the}\;\Varid{value}\;\Varid{given}\;\Varid{by}\;\Varid{the}\;\Varid{rest}\;\mathbf{of}\;\Varid{the}\;\Varid{list}\mathbin{\circ}\mathbin{\char92 \char92 }{}\<[E]%
+\\
+\>[B]{}\Conid{Finally},\Varid{evaluating}\;\Varid{an}\;\Varid{empty}\;\Varid{list}\;\Varid{should}\;\Varid{never}\;\Varid{happen}\;(\Varid{since}\;\Varid{it}\;\Varid{means}\;\Varid{that}\;\Varid{the}\;\Varid{input}\;\Varid{couldn't}\;\Varid{be}\;\Varid{parsed}\;\mathbf{in}\;\Varid{a}\;\Varid{list}\;\mathbf{of}\;\Varid{tokens})\mathbin{\circ}{}\<[E]%
+\\
+\>[B]{}\lambda \Varid{begin}\;\{\mskip1.5mu \Varid{code}\mskip1.5mu\}{}\<[E]%
+\\
 \>[B]{}\Varid{eval}\mathbin{::}[\mskip1.5mu \Conid{Token}\mskip1.5mu]\to (\Conid{Number},[\mskip1.5mu \Conid{Token}\mskip1.5mu]){}\<[E]%
 \\
 \>[B]{}\Varid{eval}\;[\mskip1.5mu \mskip1.5mu]\mathrel{=}\Varid{error}\;\text{\ttfamily \char34 empty~token~list~given~to~eval\char34}{}\<[E]%
