@@ -73,59 +73,49 @@ Evaluating such a tree is straightforward. Let's start with that easy part.
 A token in a prefix expression that has been correctly parsed can be:
 \begin{itemize}
 \item A number,
-\item An operator for an unary function (e.g. factorial)
-\item An operator for a binary function (e.g. multiplication)
+\item An unary operation, like factorial, or negation,
+\item A binary operation, like addition or multiplication.
 \end{itemize}
 
 \begin{code}
 type Number = Integer
-data Token = Num Number
-           | Op1 (Number -> Number) 
-           | Op2 (Number -> Number -> Number)
+type Unary  = Number -> Number
+type Binary = Number -> Number -> Number 
+data Token = NumberTk Number
+           | UnaryTk  Unary
+           | BinaryTk Binary
 \end{code}
-For the sake of evaluation, expressions can be seen as trees of tokens.
+A tree of tokens is formed by adding specific tokens to the tree.
 \begin{code}
 data Tree a = Nil
             | Node a (Tree a) (Tree a)
 
-numNode :: Number -> Tree Token
-numNode n = Node (Num n) Nil Nil
+numberT :: Number -> Tree Token
+numberT n                   = Node (NumberTk n) Nil Nil
 
-op1Node :: (Number -> Number) -> Tree Token -> Tree Token
-op1Node f t = Node (Op1 f) t Nil
+unaryT :: Unary -> Tree Token -> Tree Token 
+unaryT  f operand           = Node (UnaryTk f) operand Nil
 
-op2Node :: (Number -> Number -> Number) -> Tree Token -> Tree Token -> Tree Token
-op2Node f t u = Node (Op2 f) t u
+binaryT :: Binary -> Tree Token -> Tree Token -> Tree Token
+binaryT f operand1 operand2 = Node (BinaryTk f) operand1 operand2 
 
 \end{code}
-For example parsing the expression \verb|*+42 17!5| should result in the following tree:
+As an example the tree representing the expression \verb|*+42 17!5| should be equivalent to: following tree:
 \begin{code}
 fact n = product [1..n]
-example = op2Node (*)
-            (op2Node (+) 
-                (numNode 42)
-                (numNode 17))
-            (op1Node fact
-                (numNode 5))
+example = binaryT (*)
+            (binaryT (+) 
+                (numberT 42)
+                (numberT 17))
+            (unaryT fact
+                (numberT 5))
 \end{code}
-To evaluate a tree of tokens representing a prefix expression, we need to examine the token at the root of three. \\
-If this token matches the pattern \verb|Num n|, then the value is $n$ and the rest of the list is to be evaluated further.\\
+When evaluating the tree for a prefix expression, we need to examine the token at the root of this tree, and use the subtrees depending on what sort of token it is.
 \begin{code}
 eval :: Tree Token -> Number
-eval (Node (Num n) _ _) = n
-\end{code}
-If the root is a node that matches an unary operator, \verb|Op1 f|, we have to apply the function $f$ to the value represented by the first branch of this node. \\
-\begin{code}
-eval (Node (Op1 f) t _) = f (eval t)
-\end{code}
-If the node matches a binary operator, \verb|Op2 f|, we have to first evaluate the left and right subtrees, and then apply the finary function to these values.
-\\
-\begin{code}
-eval (Node (Op2 f) t u) = f (eval t) (eval u)
-\end{code}
-Finally, evaluating any other form of tree should never happen (since it means that the input couldn't be parsed in a correct tree of tokens).
-\begin{code}
-eval _ = error "incorrect prefix expression tree" 
+eval (Node (NumberTk n) _ _) = n
+eval (Node (UnaryTk f) operand _)  = f (eval operand)
+eval (Node (BinaryTk f) operand1 operand2) = f (eval operand1) (eval operand2)
 \end{code}
 Thus the expression \verb|fst (eval example)| should yield $7080$.\\
 \section{Parsing a prefix expression}
@@ -138,7 +128,7 @@ Let's first parse numbers, using the \verb|reads| parser already present in Hask
 num :: Parser Token
 num s = case reads s of
     [] -> []
-    [(n,s)] | n >= 0 -> [(Num n,s)]
+    [(n,s)] | n >= 0 -> [(NumberTk n,s)]
             | otherwise -> []
 \end{code}
 Let's define some operators that our parsers will recognize.
@@ -148,18 +138,18 @@ Let's define some operators that our parsers will recognize.
 To parse an unary operator, we need to recognize one of the symbols for such operators:
 \begin{code}
 unaryOp :: Parser Token
-unaryOp (c:s) | c == sNeg = [(Op1 negate, s)]
-unaryOp (c:s) | c == sFac = [(Op1 (\n->product[1..n]), s)]
+unaryOp (c:s) | c == sNeg = [(UnaryTk negate, s)]
+unaryOp (c:s) | c == sFac = [(UnaryTk fact, s)]
 unaryOp _ = []
 \end{code}
 The same logic applies to binary operators:
 \begin{code}
 binaryOp :: Parser Token
-binaryOp (c:s) | c == sAdd = [(Op2 (+), s)]
-binaryOp (c:s) | c == sSub = [(Op2 (-), s)]
-binaryOp (c:s) | c == sMul = [(Op2 (*), s)]
-binaryOp (c:s) | c == sDiv = [(Op2 div, s)]
-binaryOp (c:s) | c == sMod = [(Op2 mod, s)]
+binaryOp (c:s) | c == sAdd = [(BinaryTk (+), s)]
+binaryOp (c:s) | c == sSub = [(BinaryTk (-), s)]
+binaryOp (c:s) | c == sMul = [(BinaryTk (*), s)]
+binaryOp (c:s) | c == sDiv = [(BinaryTk div, s)]
+binaryOp (c:s) | c == sMod = [(BinaryTk mod, s)]
 binaryOp _ = []
 \end{code}
 Since spaces can separate numbers from operators, we need a function to augment our parsers so that they consume spaces before recognizing tokens.
@@ -168,12 +158,12 @@ spaces :: Parser a -> Parser a
 spaces p (' ':s) = spaces p s
 spaces p s = p s
 \end{code}
-We now that expressions are formed with trees of tokens, so we need a function that will use our basic parsers and put their result into a tree.
+We know that expressions are formed with trees of tokens, so we need functions that will use our basic parsers and put their result into a tree.
 \begin{code}
 tree :: Parser a -> Parser (Tree a)
-tree  = map (\(a,s) -> ([a],s)) . p
+tree  = 
 
-number = list (spaces num)
+number :: P= list (spaces num)
 unary  = list (spaces unaryOp)
 binary = list (spaces binaryOp)
 \end{code}
