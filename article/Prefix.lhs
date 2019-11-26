@@ -161,25 +161,32 @@ spaces p s = p s
 We know that expressions are formed with trees of tokens, so we need functions that will use our basic parsers and put their result into a tree.
 \begin{code}
 tree :: Parser a -> Parser (Tree a)
-tree  = 
+tree p s = case p s of
+    [] -> []
+    [(a,s)] -> [(Node a Nil Nil,s)]
 
-number :: P= list (spaces num)
-unary  = list (spaces unaryOp)
-binary = list (spaces binaryOp)
+number = tree (spaces num)
+unary  = tree (spaces unaryOp)
+binary = tree (spaces binaryOp)
 \end{code}
 
 We should be able to recognize a sequence of different tokens, so let's write a parser that is defined by the sequence of two parsers:
 \begin{code}
-seqP :: Parser [a] -> Parser [a] -> Parser [a]
+seqP :: Parser (Tree a) -> Parser (Tree a) -> Parser (Tree a)
 seqP parserA parserB s = case parserA s of
     [] -> []
-    rs -> [(a++b,u) 
+    rs -> [(grow a b,u) 
           | (a,t) <- rs
           , (b,u) <- parserB t]
+        where
+        grow :: Tree a -> Tree a -> Tree a
+        grow Nil t = t
+        grow (Node a Nil Nil) t = Node a t Nil
+        grow (Node a l Nil)   t = Node a l t
 \end{code}
 We also want to combine two parsers so that one or the other succeeds, so let's write a parser that is defined by the alternative of two parsers.
 \begin{code}
-altP :: Parser [a] -> Parser [a] -> Parser [a]
+altP :: Parser (Tree a) -> Parser (Tree a) -> Parser (Tree a)
 altP parserA parserB s = case parserA s of
     [] -> parserB s
     rs -> rs
@@ -194,7 +201,7 @@ infixl 3 <.>
 \end{code}
 Now we can define a parser for prefix expressions:
 \begin{code}
-expression :: Parser [Token]
+expression :: Parser (Tree Token)
 expression = number 
           <|> binary <.> expression <.> expression 
           <|> unary <.> expression
