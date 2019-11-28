@@ -53,8 +53,11 @@ Note how the \verb|-| symbol can be interpreted as the minus sign or the subtrac
 module Prefix
 where
 \end{code}
-Evaluating a prefix expression is easy because there is no surprise: the first element of any expression -- or sub expression -- always dictates how the rest of the expression should be interpreted. For instance in the expression $*+42\, 17\,!5$, from reading the $*$ symbol we know that we should find two operands in the rest of the expression. The first operand starts with the $+$ symbol, which indicates another binary operation, and so on. \\
-Thus if we have determined each element of the expression and collected them into a list of \emph{tokens}, we can easily change that list into a tree: \\
+To calculate the value of an expression such as:\\
+\begin{center}
+$*\,+\,42\,17\,!5$
+\end{center}
+we need to collect its \emph{tokens} ($*$,\,$+$,\,$42$,\,$17$,\,$!$,\,$5$) in a \emph{synctatic tree}. 
 \begin{center}
 \begin{forest}
     [$*$
@@ -68,54 +71,40 @@ Thus if we have determined each element of the expression and collected them int
     ]
 \end{forest}
 \end{center}
-Evaluating such a tree is straightforward. Let's start with that easy part.
-\section{Evaluating a tree of tokens}
-A token in a prefix expression that has been correctly parsed can be:
+Then we can evaluate this tree according to three rules:
 \begin{itemize}
-\item A number,
-\item An unary operation, like factorial, or negation,
-\item A binary operation, like addition or multiplication.
+\item a tree node containing a number evaluates to this number,
+\item a tree node containing an unary operator applies this operator to its first subtree,
+\item a tree node containing a binary operator applies this operator to its first and second subtrees.
 \end{itemize}
-
+\section{Some data types}
+We we have to deal with values and functions of arity 1 and 2.
 \begin{code}
-type Number = Integer
-type Unary  = Number -> Number
-type Binary = Number -> Number -> Number 
-data Token = NumberTk Number
-           | UnaryTk  Unary
-           | BinaryTk Binary
+type Value = Integer
+type Unary  = Value -> Value
+type Binary = Value -> Value -> Value 
 \end{code}
-A tree of tokens is formed by adding specific tokens to the tree.
+A token can either be a numeric value, an unary operator or a binary operator.
 \begin{code}
-data Tree a = Nil
+data Token = V Value
+           | U Unary
+           | B Binary
+\end{code}
+A tree can contain 0, 1 or 2 subtrees.
+\begin{code}
+data Tree a = Nil 
             | Node a (Tree a) (Tree a)
-
-numberT :: Number -> Tree Token
-numberT n                   = Node (NumberTk n) Nil Nil
-
-unaryT :: Unary -> Tree Token -> Tree Token 
-unaryT  f operand           = Node (UnaryTk f) operand Nil
-
-binaryT :: Binary -> Tree Token -> Tree Token -> Tree Token
-binaryT f operand1 operand2 = Node (BinaryTk f) operand1 operand2 
-
 \end{code}
-As an example the tree representing the expression \verb|*+42 17!5| should be equivalent to: following tree:
-\begin{code}
-fact n = product [1..n]
-example = binaryT (*)
-            (binaryT (+) 
-                (numberT 42)
-                (numberT 17))
-            (unaryT fact
-                (numberT 5))
-\end{code}
+A parser of type $a$ is a function from $String$ to a list of couples $[(a,String)]$. An empty list means that parsing the string let to no result, and a list with several couples 
+
+\end{document}
+
 When evaluating the tree for a prefix expression, we need to examine the token at the root of this tree, and use the subtrees depending on what sort of token it is.
 \begin{code}
-eval :: Tree Token -> Number
-eval (Node (NumberTk n) _ _) = n
-eval (Node (UnaryTk f) operand _)  = f (eval operand)
-eval (Node (BinaryTk f) operand1 operand2) = f (eval operand1) (eval operand2)
+eval :: Tree Token -> Value
+eval (Node (V n) _ _) = n
+eval (Node (U f) operand _)  = f (eval operand)
+eval (Node (B f) operand1 operand2) = f (eval operand1) (eval operand2)
 \end{code}
 Thus the expression \verb|fst (eval example)| should yield $7080$.\\
 \section{Parsing a prefix expression}
@@ -128,7 +117,7 @@ Let's first parse numbers, using the \verb|reads| parser already present in Hask
 num :: Parser Token
 num s = case reads s of
     [] -> []
-    [(n,s)] | n >= 0 -> [(NumberTk n,s)]
+    [(n,s)] | n >= 0 -> [(V n,s)]
             | otherwise -> []
 \end{code}
 Let's define some operators that our parsers will recognize.
@@ -137,19 +126,21 @@ Let's define some operators that our parsers will recognize.
 \end{code}
 To parse an unary operator, we need to recognize one of the symbols for such operators:
 \begin{code}
+fact n = product [1..n]
+
 unaryOp :: Parser Token
-unaryOp (c:s) | c == sNeg = [(UnaryTk negate, s)]
-unaryOp (c:s) | c == sFac = [(UnaryTk fact, s)]
+unaryOp (c:s) | c == sNeg = [(U negate, s)]
+unaryOp (c:s) | c == sFac = [(U fact, s)]
 unaryOp _ = []
 \end{code}
 The same logic applies to binary operators:
 \begin{code}
 binaryOp :: Parser Token
-binaryOp (c:s) | c == sAdd = [(BinaryTk (+), s)]
-binaryOp (c:s) | c == sSub = [(BinaryTk (-), s)]
-binaryOp (c:s) | c == sMul = [(BinaryTk (*), s)]
-binaryOp (c:s) | c == sDiv = [(BinaryTk div, s)]
-binaryOp (c:s) | c == sMod = [(BinaryTk mod, s)]
+binaryOp (c:s) | c == sAdd = [(B (+), s)]
+binaryOp (c:s) | c == sSub = [(B (-), s)]
+binaryOp (c:s) | c == sMul = [(B (*), s)]
+binaryOp (c:s) | c == sDiv = [(B div, s)]
+binaryOp (c:s) | c == sMod = [(B mod, s)]
 binaryOp _ = []
 \end{code}
 Since spaces can separate numbers from operators, we need a function to augment our parsers so that they consume spaces before recognizing tokens.
@@ -194,22 +185,22 @@ altP parserA parserB s = case parserA s of
 Defining operators for these function will make the code more expressive.
 \begin{code}
 infixl 2 <|>
-infixl 3 <.>
+infixl 3 <&>
 
 (<|>) = altP
-(<.>) = seqP
+(<&>) = seqP
 \end{code}
 Now we can define a parser for prefix expressions:
 \begin{code}
 expression :: Parser (Tree Token)
 expression = number 
-          <|> binary <.> expression <.> expression 
-          <|> unary <.> expression
+          <|> unary <&> expression
+          <|> binary <&> expression <&> expression 
 \end{code}
 
 Now we can define the main function to evaluate a prefix expression. If the expression has correctly been parsed, we evaluate the first list of tokens, and extract the number from the result.
 \begin{code}
-prefix :: String -> Number
+prefix :: String -> Value
 prefix s = case expression s of
     [] -> error "incorrect prefix expression"
     ((ts,_):_) -> eval ts

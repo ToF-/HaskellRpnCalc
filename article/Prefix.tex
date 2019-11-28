@@ -315,8 +315,11 @@ Note how the \text{\ttfamily \char45{}} symbol can be interpreted as the minus s
 \>[B]{}\mathbf{where}{}\<[E]%
 \ColumnHook
 \end{hscode}\resethooks
-Evaluating a prefix expression is easy because there is no surprise: the first element of any expression -- or sub expression -- always dictates how the rest of the expression should be interpreted. For instance in the expression $*+42\, 17\,!5$, from reading the $*$ symbol we know that we should find two operands in the rest of the expression. The first operand starts with the $+$ symbol, which indicates another binary operation, and so on. \\
-Thus if we have determined each element of the expression and collected them into a list of \emph{tokens}, we can easily change that list into a tree: \\
+To calculate the value of an expression such as:\\
+\begin{center}
+$*\,+\,42\,17\,!5$
+\end{center}
+we need to collect its \emph{tokens} ($*$,\,$+$,\,$42$,\,$17$,\,$!$,\,$5$) in a \emph{synctatic tree}. 
 \begin{center}
 \begin{forest}
     [$*$
@@ -330,105 +333,67 @@ Thus if we have determined each element of the expression and collected them int
     ]
 \end{forest}
 \end{center}
-Evaluating such a tree is straightforward. Let's start with that easy part.
-\section{Evaluating a tree of tokens}
-A token in a prefix expression that has been correctly parsed can be:
+Then we can evaluate this tree according to three rules:
 \begin{itemize}
-\item A number,
-\item An unary operation, like factorial, or negation,
-\item A binary operation, like addition or multiplication.
+\item a tree node containing a number evaluates to this number,
+\item a tree node containing an unary operator applies this operator to its first subtree,
+\item a tree node containing a binary operator applies this operator to its first and second subtrees.
 \end{itemize}
-
+\section{Some data types}
+We we have to deal with values and functions of arity 1 and 2.
+\begin{hscode}\SaveRestoreHook
+\column{B}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{13}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{E}{@{}>{\hspre}l<{\hspost}@{}}%
+\>[B]{}\mathbf{type}\;\Conid{Value}\mathrel{=}\Conid{Integer}{}\<[E]%
+\\
+\>[B]{}\mathbf{type}\;\Conid{Unary}{}\<[13]%
+\>[13]{}\mathrel{=}\Conid{Value}\to \Conid{Value}{}\<[E]%
+\\
+\>[B]{}\mathbf{type}\;\Conid{Binary}\mathrel{=}\Conid{Value}\to \Conid{Value}\to \Conid{Value}{}\<[E]%
+\ColumnHook
+\end{hscode}\resethooks
+A token can either be a numeric value, an unary operator or a binary operator.
 \begin{hscode}\SaveRestoreHook
 \column{B}{@{}>{\hspre}l<{\hspost}@{}}%
 \column{12}{@{}>{\hspre}l<{\hspost}@{}}%
-\column{13}{@{}>{\hspre}l<{\hspost}@{}}%
-\column{23}{@{}>{\hspre}l<{\hspost}@{}}%
 \column{E}{@{}>{\hspre}l<{\hspost}@{}}%
-\>[B]{}\mathbf{type}\;\Conid{Number}\mathrel{=}\Conid{Integer}{}\<[E]%
-\\
-\>[B]{}\mathbf{type}\;\Conid{Unary}{}\<[13]%
-\>[13]{}\mathrel{=}\Conid{Number}\to \Conid{Number}{}\<[E]%
-\\
-\>[B]{}\mathbf{type}\;\Conid{Binary}\mathrel{=}\Conid{Number}\to \Conid{Number}\to \Conid{Number}{}\<[E]%
-\\
-\>[B]{}\mathbf{data}\;\Conid{Token}\mathrel{=}\Conid{NumberTk}\;\Conid{Number}{}\<[E]%
+\>[B]{}\mathbf{data}\;\Conid{Token}\mathrel{=}\Conid{V}\;\Conid{Value}{}\<[E]%
 \\
 \>[B]{}\hsindent{12}{}\<[12]%
-\>[12]{}\mid \Conid{UnaryTk}\;{}\<[23]%
-\>[23]{}\Conid{Unary}{}\<[E]%
+\>[12]{}\mid \Conid{U}\;\Conid{Unary}{}\<[E]%
 \\
 \>[B]{}\hsindent{12}{}\<[12]%
-\>[12]{}\mid \Conid{BinaryTk}\;\Conid{Binary}{}\<[E]%
+\>[12]{}\mid \Conid{B}\;\Conid{Binary}{}\<[E]%
 \ColumnHook
 \end{hscode}\resethooks
-A tree of tokens is formed by adding specific tokens to the tree.
+A tree can contain 0, 1 or 2 subtrees.
 \begin{hscode}\SaveRestoreHook
 \column{B}{@{}>{\hspre}l<{\hspost}@{}}%
-\column{9}{@{}>{\hspre}l<{\hspost}@{}}%
 \column{13}{@{}>{\hspre}l<{\hspost}@{}}%
-\column{29}{@{}>{\hspre}l<{\hspost}@{}}%
 \column{E}{@{}>{\hspre}l<{\hspost}@{}}%
 \>[B]{}\mathbf{data}\;\Conid{Tree}\;\Varid{a}\mathrel{=}\Conid{Nil}{}\<[E]%
 \\
 \>[B]{}\hsindent{13}{}\<[13]%
-\>[13]{}\mid \Conid{Node}\;\Varid{a}\;(\Conid{Tree}\;\Varid{a})\;(\Conid{Tree}\;\Varid{a}){}\<[E]%
-\\[\blanklineskip]%
-\>[B]{}\Varid{numberT}\mathbin{::}\Conid{Number}\to \Conid{Tree}\;\Conid{Token}{}\<[E]%
-\\
-\>[B]{}\Varid{numberT}\;\Varid{n}{}\<[29]%
-\>[29]{}\mathrel{=}\Conid{Node}\;(\Conid{NumberTk}\;\Varid{n})\;\Conid{Nil}\;\Conid{Nil}{}\<[E]%
-\\[\blanklineskip]%
-\>[B]{}\Varid{unaryT}\mathbin{::}\Conid{Unary}\to \Conid{Tree}\;\Conid{Token}\to \Conid{Tree}\;\Conid{Token}{}\<[E]%
-\\
-\>[B]{}\Varid{unaryT}\;{}\<[9]%
-\>[9]{}\Varid{f}\;\Varid{operand}{}\<[29]%
-\>[29]{}\mathrel{=}\Conid{Node}\;(\Conid{UnaryTk}\;\Varid{f})\;\Varid{operand}\;\Conid{Nil}{}\<[E]%
-\\[\blanklineskip]%
-\>[B]{}\Varid{binaryT}\mathbin{::}\Conid{Binary}\to \Conid{Tree}\;\Conid{Token}\to \Conid{Tree}\;\Conid{Token}\to \Conid{Tree}\;\Conid{Token}{}\<[E]%
-\\
-\>[B]{}\Varid{binaryT}\;\Varid{f}\;\Varid{operand1}\;\Varid{operand2}\mathrel{=}\Conid{Node}\;(\Conid{BinaryTk}\;\Varid{f})\;\Varid{operand1}\;\Varid{operand2}{}\<[E]%
+\>[13]{}\mid \Conid{Node}\;(\Conid{Tree}\;\Varid{a})\;(\Conid{Tree}\;\Varid{a}){}\<[E]%
 \ColumnHook
 \end{hscode}\resethooks
-As an example the tree representing the expression \text{\ttfamily \char42{}\char43{}42~17\char33{}5} should be equivalent to: following tree:
-\begin{hscode}\SaveRestoreHook
-\column{B}{@{}>{\hspre}l<{\hspost}@{}}%
-\column{13}{@{}>{\hspre}l<{\hspost}@{}}%
-\column{17}{@{}>{\hspre}l<{\hspost}@{}}%
-\column{E}{@{}>{\hspre}l<{\hspost}@{}}%
-\>[B]{}\Varid{fact}\;\Varid{n}\mathrel{=}\Varid{product}\;[\mskip1.5mu \mathrm{1}\mathinner{\ldotp\ldotp}\Varid{n}\mskip1.5mu]{}\<[E]%
-\\
-\>[B]{}\Varid{example}\mathrel{=}\Varid{binaryT}\;(\mathbin{*})\;{}\<[E]%
-\\
-\>[B]{}\hsindent{13}{}\<[13]%
-\>[13]{}(\Varid{binaryT}\;(\mathbin{+})\;{}\<[E]%
-\\
-\>[13]{}\hsindent{4}{}\<[17]%
-\>[17]{}(\Varid{numberT}\;\mathrm{42})\;{}\<[E]%
-\\
-\>[13]{}\hsindent{4}{}\<[17]%
-\>[17]{}(\Varid{numberT}\;\mathrm{17}))\;{}\<[E]%
-\\
-\>[B]{}\hsindent{13}{}\<[13]%
-\>[13]{}(\Varid{unaryT}\;\Varid{fact}\;{}\<[E]%
-\\
-\>[13]{}\hsindent{4}{}\<[17]%
-\>[17]{}(\Varid{numberT}\;\mathrm{5})){}\<[E]%
-\ColumnHook
-\end{hscode}\resethooks
+
+\end{document}
+
 When evaluating the tree for a prefix expression, we need to examine the token at the root of this tree, and use the subtrees depending on what sort of token it is.
 \begin{hscode}\SaveRestoreHook
 \column{B}{@{}>{\hspre}l<{\hspost}@{}}%
-\column{36}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{30}{@{}>{\hspre}l<{\hspost}@{}}%
 \column{E}{@{}>{\hspre}l<{\hspost}@{}}%
-\>[B]{}\Varid{eval}\mathbin{::}\Conid{Tree}\;\Conid{Token}\to \Conid{Number}{}\<[E]%
+\>[B]{}\Varid{eval}\mathbin{::}\Conid{Tree}\;\Conid{Token}\to \Conid{Value}{}\<[E]%
 \\
-\>[B]{}\Varid{eval}\;(\Conid{Node}\;(\Conid{NumberTk}\;\Varid{n})\;\anonymous \;\anonymous )\mathrel{=}\Varid{n}{}\<[E]%
+\>[B]{}\Varid{eval}\;(\Conid{Node}\;(\Conid{V}\;\Varid{n})\;\anonymous \;\anonymous )\mathrel{=}\Varid{n}{}\<[E]%
 \\
-\>[B]{}\Varid{eval}\;(\Conid{Node}\;(\Conid{UnaryTk}\;\Varid{f})\;\Varid{operand}\;\anonymous ){}\<[36]%
-\>[36]{}\mathrel{=}\Varid{f}\;(\Varid{eval}\;\Varid{operand}){}\<[E]%
+\>[B]{}\Varid{eval}\;(\Conid{Node}\;(\Conid{U}\;\Varid{f})\;\Varid{operand}\;\anonymous ){}\<[30]%
+\>[30]{}\mathrel{=}\Varid{f}\;(\Varid{eval}\;\Varid{operand}){}\<[E]%
 \\
-\>[B]{}\Varid{eval}\;(\Conid{Node}\;(\Conid{BinaryTk}\;\Varid{f})\;\Varid{operand1}\;\Varid{operand2})\mathrel{=}\Varid{f}\;(\Varid{eval}\;\Varid{operand1})\;(\Varid{eval}\;\Varid{operand2}){}\<[E]%
+\>[B]{}\Varid{eval}\;(\Conid{Node}\;(\Conid{B}\;\Varid{f})\;\Varid{operand1}\;\Varid{operand2})\mathrel{=}\Varid{f}\;(\Varid{eval}\;\Varid{operand1})\;(\Varid{eval}\;\Varid{operand2}){}\<[E]%
 \ColumnHook
 \end{hscode}\resethooks
 Thus the expression \text{\ttfamily fst~\char40{}eval~example\char41{}} should yield $7080$.\\
@@ -454,7 +419,7 @@ Let's first parse numbers, using the \text{\ttfamily reads} parser already prese
 \>[5]{}[\mskip1.5mu \mskip1.5mu]\to [\mskip1.5mu \mskip1.5mu]{}\<[E]%
 \\
 \>[B]{}\hsindent{5}{}\<[5]%
-\>[5]{}[\mskip1.5mu (\Varid{n},\Varid{s})\mskip1.5mu]\mid \Varid{n}\geq \mathrm{0}\to [\mskip1.5mu (\Conid{NumberTk}\;\Varid{n},\Varid{s})\mskip1.5mu]{}\<[E]%
+\>[5]{}[\mskip1.5mu (\Varid{n},\Varid{s})\mskip1.5mu]\mid \Varid{n}\geq \mathrm{0}\to [\mskip1.5mu (\Conid{V}\;\Varid{n},\Varid{s})\mskip1.5mu]{}\<[E]%
 \\
 \>[5]{}\hsindent{8}{}\<[13]%
 \>[13]{}\mid \Varid{otherwise}\to [\mskip1.5mu \mskip1.5mu]{}\<[E]%
@@ -473,9 +438,9 @@ To parse an unary operator, we need to recognize one of the symbols for such ope
 \column{E}{@{}>{\hspre}l<{\hspost}@{}}%
 \>[B]{}\Varid{unaryOp}\mathbin{::}\Conid{Parser}\;\Conid{Token}{}\<[E]%
 \\
-\>[B]{}\Varid{unaryOp}\;(\Varid{c}\mathbin{:}\Varid{s})\mid \Varid{c}\equiv \Varid{sNeg}\mathrel{=}[\mskip1.5mu (\Conid{UnaryTk}\;\Varid{negate},\Varid{s})\mskip1.5mu]{}\<[E]%
+\>[B]{}\Varid{unaryOp}\;(\Varid{c}\mathbin{:}\Varid{s})\mid \Varid{c}\equiv \Varid{sNeg}\mathrel{=}[\mskip1.5mu (\Conid{U}\;\Varid{negate},\Varid{s})\mskip1.5mu]{}\<[E]%
 \\
-\>[B]{}\Varid{unaryOp}\;(\Varid{c}\mathbin{:}\Varid{s})\mid \Varid{c}\equiv \Varid{sFac}\mathrel{=}[\mskip1.5mu (\Conid{UnaryTk}\;\Varid{fact},\Varid{s})\mskip1.5mu]{}\<[E]%
+\>[B]{}\Varid{unaryOp}\;(\Varid{c}\mathbin{:}\Varid{s})\mid \Varid{c}\equiv \Varid{sFac}\mathrel{=}[\mskip1.5mu (\Conid{U}\;\Varid{fact},\Varid{s})\mskip1.5mu]{}\<[E]%
 \\
 \>[B]{}\Varid{unaryOp}\;\anonymous \mathrel{=}[\mskip1.5mu \mskip1.5mu]{}\<[E]%
 \ColumnHook
@@ -486,15 +451,15 @@ The same logic applies to binary operators:
 \column{E}{@{}>{\hspre}l<{\hspost}@{}}%
 \>[B]{}\Varid{binaryOp}\mathbin{::}\Conid{Parser}\;\Conid{Token}{}\<[E]%
 \\
-\>[B]{}\Varid{binaryOp}\;(\Varid{c}\mathbin{:}\Varid{s})\mid \Varid{c}\equiv \Varid{sAdd}\mathrel{=}[\mskip1.5mu (\Conid{BinaryTk}\;(\mathbin{+}),\Varid{s})\mskip1.5mu]{}\<[E]%
+\>[B]{}\Varid{binaryOp}\;(\Varid{c}\mathbin{:}\Varid{s})\mid \Varid{c}\equiv \Varid{sAdd}\mathrel{=}[\mskip1.5mu (\Conid{B}\;(\mathbin{+}),\Varid{s})\mskip1.5mu]{}\<[E]%
 \\
-\>[B]{}\Varid{binaryOp}\;(\Varid{c}\mathbin{:}\Varid{s})\mid \Varid{c}\equiv \Varid{sSub}\mathrel{=}[\mskip1.5mu (\Conid{BinaryTk}\;(\mathbin{-}),\Varid{s})\mskip1.5mu]{}\<[E]%
+\>[B]{}\Varid{binaryOp}\;(\Varid{c}\mathbin{:}\Varid{s})\mid \Varid{c}\equiv \Varid{sSub}\mathrel{=}[\mskip1.5mu (\Conid{B}\;(\mathbin{-}),\Varid{s})\mskip1.5mu]{}\<[E]%
 \\
-\>[B]{}\Varid{binaryOp}\;(\Varid{c}\mathbin{:}\Varid{s})\mid \Varid{c}\equiv \Varid{sMul}\mathrel{=}[\mskip1.5mu (\Conid{BinaryTk}\;(\mathbin{*}),\Varid{s})\mskip1.5mu]{}\<[E]%
+\>[B]{}\Varid{binaryOp}\;(\Varid{c}\mathbin{:}\Varid{s})\mid \Varid{c}\equiv \Varid{sMul}\mathrel{=}[\mskip1.5mu (\Conid{B}\;(\mathbin{*}),\Varid{s})\mskip1.5mu]{}\<[E]%
 \\
-\>[B]{}\Varid{binaryOp}\;(\Varid{c}\mathbin{:}\Varid{s})\mid \Varid{c}\equiv \Varid{sDiv}\mathrel{=}[\mskip1.5mu (\Conid{BinaryTk}\;\Varid{div},\Varid{s})\mskip1.5mu]{}\<[E]%
+\>[B]{}\Varid{binaryOp}\;(\Varid{c}\mathbin{:}\Varid{s})\mid \Varid{c}\equiv \Varid{sDiv}\mathrel{=}[\mskip1.5mu (\Conid{B}\;\Varid{div},\Varid{s})\mskip1.5mu]{}\<[E]%
 \\
-\>[B]{}\Varid{binaryOp}\;(\Varid{c}\mathbin{:}\Varid{s})\mid \Varid{c}\equiv \Varid{sMod}\mathrel{=}[\mskip1.5mu (\Conid{BinaryTk}\;\Varid{mod},\Varid{s})\mskip1.5mu]{}\<[E]%
+\>[B]{}\Varid{binaryOp}\;(\Varid{c}\mathbin{:}\Varid{s})\mid \Varid{c}\equiv \Varid{sMod}\mathrel{=}[\mskip1.5mu (\Conid{B}\;\Varid{mod},\Varid{s})\mskip1.5mu]{}\<[E]%
 \\
 \>[B]{}\Varid{binaryOp}\;\anonymous \mathrel{=}[\mskip1.5mu \mskip1.5mu]{}\<[E]%
 \ColumnHook
@@ -627,7 +592,7 @@ Now we can define the main function to evaluate a prefix expression. If the expr
 \column{B}{@{}>{\hspre}l<{\hspost}@{}}%
 \column{5}{@{}>{\hspre}l<{\hspost}@{}}%
 \column{E}{@{}>{\hspre}l<{\hspost}@{}}%
-\>[B]{}\Varid{prefix}\mathbin{::}\Conid{String}\to \Conid{Number}{}\<[E]%
+\>[B]{}\Varid{prefix}\mathbin{::}\Conid{String}\to \Conid{Value}{}\<[E]%
 \\
 \>[B]{}\Varid{prefix}\;\Varid{s}\mathrel{=}\mathbf{case}\;\Varid{expression}\;\Varid{s}\;\mathbf{of}{}\<[E]%
 \\
