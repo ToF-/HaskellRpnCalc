@@ -32,32 +32,33 @@
 %include spacing.fmt
 %include polycode.fmt
 \newcommand\tab[1][1cm]{\hspace*{#1}}
+\newcommand\hl{\vspace{02mm}\hrule\vspace{02mm}}
 \begin{document}
 \setlength{\parindent}{0em}
 \section*{Let's write a program...}
+\begin{minipage}{6cm}
 Let's write a program that reads expressions in prefix notation, and writes their value as an output.
+\end{minipage}
+\begin{minipage}{10cm}
 \begin{code}
 main = interact $ unlines . map prefix . lines
 \end{code}
-Here are examples of such expressions:\\
-
-\begin{center}
-\begin{tabular}{c c c}
-\emph{prefix expression} & \emph{value} & \emph{infix equivalent}\\
-\hline 
-\hline
-\verb|*+42 17!5 | & $7080$ & $(42+17)\times!5$ \\
-\verb|+4-3 +10-5| & $2$ & $(4+3-(10+(-5)))$ \\
-\hline
-\end{tabular}\\
-\end{center}
-Note how the \verb|-| symbol can be interpreted as the minus sign or the subtraction operator.\\
-
-To calculate the value of an expression such as:\\
-\begin{center}
-$*\,+\,42\,17\,!5$
-\end{center}
-we need to collect its \emph{tokens} ($*$,\,$+$,\,$42$,\,$17$,\,$!$,\,$5$) in a \emph{synctatic tree}. 
+\end{minipage} 
+\hl
+\begin{minipage}{6cm}
+Here are examples of such expressions. Note how the \verb|-| symbol can be interpreted as the minus sign or the subtraction operator.\\
+\end{minipage}
+\begin{minipage}{10cm}
+\begin{code}
+example1 = "*+42 17!5"
+example2 = "+4-3 +10-5"
+\end{code}
+\end{minipage}
+\hl
+\begin{minipage}{6cm}
+To calculate the value of an expression such as: \\\begin{center}\framebox{$*\,+\,42\,17\,!5$}\\\end{center} we need to collect its \emph{tokens} ($*$,\,$+$,\,$42$,\,$17$,\,$!$,\,$5$) in a \emph{synctatic tree}. 
+\end{minipage}
+\begin{minipage}{10cm}
 \begin{center}
 \begin{forest}
     [$*$
@@ -71,13 +72,15 @@ we need to collect its \emph{tokens} ($*$,\,$+$,\,$42$,\,$17$,\,$!$,\,$5$) in a 
     ]
 \end{forest}
 \end{center}
-Then we can evaluate this tree according to three rules:
-\begin{itemize}
-\item a tree node containing a number evaluates to this number,
-\item a tree node containing an unary operator applies this operator to its first subtree,
-\item a tree node containing a binary operator applies this operator to its first and second subtrees.
-\end{itemize}
-\begin{minipage}{3cm}
+\end{minipage}
+\begin{minipage}{6cm}
+Then the tree can be \emph{evaluated} according to three rules:
+a node containing a number evaluates to this number,
+a node containing an unary operator applies this operator to its first subtree,
+a node containing a binary operator applies this operator to its first and second subtrees.
+\end{minipage}
+\begin{minipage}{10cm}
+\begin{minipage}{20mm}
 \begin{center}
 \begin{forest}
     [$*$
@@ -93,7 +96,7 @@ Then we can evaluate this tree according to three rules:
 \end{center}
 \end{minipage}
 $\Longrightarrow$
-\begin{minipage}{3cm}
+\begin{minipage}{20mm}
 \begin{center}
 \begin{forest}
     [$*$
@@ -106,7 +109,7 @@ $\Longrightarrow$
 \end{center}
 \end{minipage}
 $\Longrightarrow$
-\begin{minipage}{3cm}
+\begin{minipage}{20mm}
 \begin{center}
 \begin{forest}
     [$*$
@@ -116,6 +119,8 @@ $\Longrightarrow$
 \end{forest}
 \end{center}
 \end{minipage}
+\end{minipage}
+\end{document}
 $\Longrightarrow$
 \begin{minipage}{3cm}
 \begin{center}
