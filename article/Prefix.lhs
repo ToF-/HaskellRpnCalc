@@ -1,5 +1,5 @@
 \documentclass[a4paper,10pt]{article}
-\usepackage{longtable,geometry}
+\usepackage[top=15mm, bottom=15mm, left=1cm, right=1cm]{geometry}
 \usepackage{tabularx}
 \usepackage[english]{babel}
 \usepackage[latin1]{inputenc}
@@ -9,7 +9,7 @@
 \usepackage{array}
 \usepackage{fancyhdr}
 \pagestyle{plain}
-\geometry{dvips,a4paper,margin=1.5in}
+\geometry{dvips,a4paper,margin=1cm}
 \usepackage[usenames,dvipsnames]{xcolor}
 \usepackage{amssymb,amsmath} 
 \usepackage{afterpage}
@@ -25,42 +25,39 @@
 \usepackage{rotating}
 \usepackage{tikz}
 \usepackage[linguistics]{forest}
-\usepackage{wallpaper}
 
 %include lhs2TeX.fmt
 %include lhs2TeX.sty
 %include spacing.fmt
 %include polycode.fmt
 \newcommand\tab[1][1cm]{\hspace*{#1}}
-\newcommand\hl{\vspace{02mm}\hrule\vspace{02mm}}
+\newcommand\hl{\vspace{02mm}\begin{center}\hrule\end{center}\vspace{02mm}}
 \begin{document}
 \setlength{\parindent}{0em}
 \section*{Let's write a program...}
-\begin{minipage}{6cm}
+\begin{minipage}{9.5cm}
 Let's write a program that reads expressions in prefix notation, and writes their value as an output.
 \end{minipage}
-\begin{minipage}{10cm}
+\begin{minipage}{9.5cm}
 \begin{code}
 main = interact $ unlines . map prefix . lines
 \end{code}
 \end{minipage} 
 \hl
-\begin{minipage}{6cm}
+\begin{minipage}{9.5cm}
 Here are examples of such expressions. Note how the \verb|-| symbol can be interpreted as the minus sign or the subtraction operator.\\
 \end{minipage}
-\begin{minipage}{10cm}
+\begin{minipage}{9.5cm}
 \begin{code}
 example1 = "*+42 17!5"
 example2 = "+4-3 +10-5"
 \end{code}
 \end{minipage}
 \hl
-\begin{minipage}{6cm}
+\begin{minipage}{9.5cm}
 To calculate the value of an expression such as: \\\begin{center}\framebox{$*\,+\,42\,17\,!5$}\\\end{center} we need to collect its \emph{tokens} ($*$,\,$+$,\,$42$,\,$17$,\,$!$,\,$5$) in a \emph{synctatic tree}. 
 \end{minipage}
-\begin{minipage}{10cm}
-\begin{center}
-\begin{forest}
+\begin{minipage}{9.5cm} \begin{center} \begin{forest}
     [$*$
         [$+$
             [$42$]
@@ -70,19 +67,19 @@ To calculate the value of an expression such as: \\\begin{center}\framebox{$*\,+
             [$5$]
         ]
     ]
-\end{forest}
-\end{center}
-\end{minipage}
-\begin{minipage}{6cm}
+\end{forest} \end{center} \end{minipage}
+\hl
+\begin{minipage}{9.5cm}
 Then the tree can be \emph{evaluated} according to three rules:
-a node containing a number evaluates to this number,
-a node containing an unary operator applies this operator to its first subtree,
-a node containing a binary operator applies this operator to its first and second subtrees.
+\begin{itemize}
+\item a node containing a number evaluates to this number,
+\item a node containing an unary operator applies this operator to its first subtree,
+\item a node containing a binary operator applies this operator to its first and second subtrees.
+\end{itemize}
 \end{minipage}
-\begin{minipage}{10cm}
-\begin{minipage}{20mm}
-\begin{center}
-\begin{forest}
+\begin{minipage}{9.5cm}
+\begin{small}
+\begin{minipage}{18mm} \begin{center} \begin{forest}
     [$*$
         [$+$
             [$42$]
@@ -92,50 +89,41 @@ a node containing a binary operator applies this operator to its first and secon
             [$5$]
         ]
     ]
-\end{forest}
-\end{center}
-\end{minipage}
+\end{forest} \end{center} \end{minipage}
 $\Longrightarrow$
-\begin{minipage}{20mm}
-\begin{center}
-\begin{forest}
+\begin{minipage}{18mm} \begin{center} \begin{forest}
     [$*$
         [$59$]
         [$!$
             [$5$]
         ]
     ]
-\end{forest}
-\end{center}
-\end{minipage}
+\end{forest} \end{center} \end{minipage}
 $\Longrightarrow$
-\begin{minipage}{20mm}
-\begin{center}
-\begin{forest}
+\begin{minipage}{18mm} \begin{center} \begin{forest}
     [$*$
         [$59$]
         [{$120$}]
     ]
-\end{forest}
-\end{center}
-\end{minipage}
+\end{forest} \end{center} \end{minipage}
+$\Longrightarrow$
+\begin{minipage}{18mm} \begin{center} \begin{forest}
+    [$7080$]
+\end{forest} \end{center} \end{minipage}
+\end{small}
 \end{minipage}
 \end{document}
-$\Longrightarrow$
-\begin{minipage}{3cm}
-\begin{center}
-\begin{forest}
-    [$7080$]
-\end{forest}
-\end{center}
-\end{minipage}\\
+\begin{minipage}{9.5cm}
 The main task consist thus in \emph{parsing} the String given in input, yielding a synctatic tree which, if correctly formed, can be evaluated.
+\end{minipage}
+\begin{minipage}{9.5cm}
 \begin{code}
 prefix :: String -> String
 prefix s = case parse s of
     [(tree,_)] -> show (eval tree)
     []         -> "incorrect prefix expression"
 \end{code}
+\end{minipage}
 \section*{Some data types}
 We have to deal with values and functions of arity 1 and 2.
 \begin{code}
